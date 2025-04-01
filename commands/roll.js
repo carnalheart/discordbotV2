@@ -26,12 +26,12 @@ module.exports = {
     const rollsStr = rolls.join(', ');
 
     const embed = new EmbedBuilder()
-      .setTitle(`🎲 Dice Roll`)
-      .setColor('#5865F2')
+      .setTitle(`― Roll Results`)
+      .setColor('#23272A')
       .setDescription(
         count === 1
-          ? `You rolled a **${rolls[0]}** (1d${sides})`
-          : `You rolled **${total}** (${count}d${sides})\nIndividual rolls: ${rollsStr}`
+          ? `**${rolls[0]}**`
+          : `**${rollsStr}**`
       );
 
     message.reply({ embeds: [embed] });
