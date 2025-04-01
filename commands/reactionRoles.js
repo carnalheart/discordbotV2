@@ -39,29 +39,28 @@ const roleMap = {
     return emoji.id ? `${emoji.name}:${emoji.id}` : emoji.name;
   }
   
-  module.exports = {
-    handleReaction: async (reaction, user, add = true) => {
-      if (user.bot) return;
+  async function handleReaction(reaction, user, add = true) {
+    if (user.bot) return;
   
-      const messageId = reaction.message.id;
-      const emojiKey = getEmojiKey(reaction.emoji);
-      const roleId = roleMap[messageId]?.[emojiKey];
+    const messageId = reaction.message.id;
+    const emojiKey = getEmojiKey(reaction.emoji);
+    const roleId = roleMap[messageId]?.[emojiKey];
   
-      if (!roleId) return;
+    if (!roleId) return;
   
-      // 🔍 Debug log
-      console.log(`Reaction detected on message ${messageId} with emoji ${emojiKey}`);
+    console.log(`Reaction detected on message ${messageId} with emoji ${emojiKey}`);
   
-      const guild = reaction.message.guild;
-      const member = await guild.members.fetch(user.id).catch(() => null);
-      const role = guild.roles.cache.get(roleId);
+    const guild = reaction.message.guild;
+    const member = await guild.members.fetch(user.id).catch(() => null);
+    const role = guild.roles.cache.get(roleId);
   
-      if (!member || !role) return;
+    if (!member || !role) return;
   
-      if (add) {
-        member.roles.add(role).catch(console.error);
-      } else {
-        member.roles.remove(role).catch(console.error);
-      }
+    if (add) {
+      member.roles.add(role).catch(console.error);
+    } else {
+      member.roles.remove(role).catch(console.error);
     }
-  };  
+  }
+  
+  module.exports = handleReaction;  
