@@ -1,16 +1,19 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
+const { handleReaction } = require('./reactionRoles');
 
 // Initialize the bot client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions
+  ],
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel]
 });
 
 // Connect to MongoDB
@@ -22,7 +25,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB connection error:', err);
   });
 
-// Load all command files into a Map
+// Load command files
 client.commands = new Map();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -66,5 +69,26 @@ client.on('messageCreate', message => {
   }
 });
 
-// Login the bot
+// Reaction role listeners
+client.on('messageReactionAdd', (reaction, user) => {
+  if (reaction.partial) {
+    reaction.fetch()
+      .then(full => handleReaction(full, user, true))
+      .catch(console.error);
+  } else {
+    handleReaction(reaction, user, true);
+  }
+});
+
+client.on('messageReactionRemove', (reaction, user) => {
+  if (reaction.partial) {
+    reaction.fetch()
+      .then(full => handleReaction(full, user, false))
+      .catch(console.error);
+  } else {
+    handleReaction(reaction, user, false);
+  }
+});
+
+// Log in the bot
 client.login(process.env.TOKEN);
