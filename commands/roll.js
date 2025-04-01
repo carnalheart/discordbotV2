@@ -37,3 +37,4 @@ module.exports = {
     message.reply({ embeds: [embed] });
   }
 };
+// Updated embed output format
