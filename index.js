@@ -4,7 +4,7 @@ const path = require('path');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
 const handleReaction = require('./commands/reactionRoles');
-const initLogger = require('./logger');
+const initLogger = require('./commands/logger'); // ✅ updated path
 const initWelcomer = require('./welcomer');
 
 const client = new Client({
@@ -20,6 +20,7 @@ const client = new Client({
   partials: [Partials.Message, Partials.Reaction, Partials.Channel]
 });
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB!');
@@ -49,8 +50,8 @@ client.once('ready', () => {
     ]
   });
 
-  initLogger(client);
-  initWelcomer(client);
+  initLogger(client);    // 🪶 Logging system
+  initWelcomer(client);  // 👋 Welcomer system
 });
 
 const prefix = '.';
