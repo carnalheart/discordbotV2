@@ -4,7 +4,7 @@ const path = require('path');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
 const handleReaction = require('./commands/reactionRoles');
-const initLogger = require('./commands/logger'); // ✅ updated path
+const initLogger = require('./commands/logger');
 const initWelcomer = require('./welcomer');
 
 const client = new Client({
@@ -50,8 +50,8 @@ client.once('ready', () => {
     ]
   });
 
-  initLogger(client);    // 🪶 Logging system
-  initWelcomer(client);  // 👋 Welcomer system
+  initLogger(client);
+  initWelcomer(client);
 });
 
 const prefix = '.';
@@ -59,12 +59,14 @@ const prefix = '.';
 client.on('messageCreate', message => {
   if (message.author.bot) return;
 
-  // Prefixed commands (like .roll)
+  // Prefixed commands
   if (message.content.startsWith(prefix)) {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
     const command = client.commands.get(commandName);
-    if (!command) return;
+
+    if (!command || command.isSilent) return;
+
     try {
       command.execute(message, args);
     } catch (err) {

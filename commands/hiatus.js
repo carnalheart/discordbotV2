@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'hiatus',
+  isSilent: true, // <— tell index.js not to auto-trigger this
   execute(message) {
     const allowedChannel = '1344043468582031401';
     const roleId = '1354501284253798522';
