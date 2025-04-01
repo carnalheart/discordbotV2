@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 
+// Create bot client with necessary intents
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -10,22 +11,23 @@ const client = new Client({
   ]
 });
 
-// MongoDB connect
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB!');
-}).catch(err => console.error(err));
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB!');
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+  });
 
-// Bot is ready
+// When bot is ready
 client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// 💬 Word-based ping command
+// Handle incoming messages
 client.on('messageCreate', message => {
-  if (message.author.bot) return; // Don't respond to other bots
+  if (message.author.bot) return;
 
   const msg = message.content.toLowerCase();
 
@@ -34,4 +36,5 @@ client.on('messageCreate', message => {
   }
 });
 
+// Login using token from .env
 client.login(process.env.TOKEN);
