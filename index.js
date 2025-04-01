@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB connection error:', err);
   });
 
-// Load command files from /commands
+// Load all command files into a Map
 client.commands = new Map();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -31,30 +31,40 @@ for (const file of commandFiles) {
   client.commands.set(command.name, command);
 }
 
-// When bot is ready
+// When the bot is ready
 client.once('ready', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// Handle message commands with '.' prefix
+// Handle messages
 const prefix = '.';
 
 client.on('messageCreate', message => {
-  if (message.author.bot || !message.content.startsWith(prefix)) return;
+  if (message.author.bot) return;
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
+  // Handle prefixed commands like .roll
+  if (message.content.startsWith(prefix)) {
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
 
-  const command = client.commands.get(commandName);
-  if (!command) return;
+    const command = client.commands.get(commandName);
+    if (!command) return;
 
-  try {
-    command.execute(message, args);
-  } catch (err) {
-    console.error(err);
-    message.reply('❌ Something went wrong while running that command.');
+    try {
+      command.execute(message, args);
+    } catch (err) {
+      console.error(err);
+    }
+
+    return;
+  }
+
+  // Handle exact phrase "turn key" (case-sensitive)
+  const turnkeyCommand = client.commands.get('turnkey');
+  if (message.content === 'turn key' && turnkeyCommand) {
+    return turnkeyCommand.execute(message);
   }
 });
 
-// Log in the bot
+// Login the bot
 client.login(process.env.TOKEN);
