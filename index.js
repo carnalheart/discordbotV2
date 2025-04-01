@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
-const { handleReaction } = require('./reactionRoles');
+// Updated import: reactionRoles.js is in the commands folder now
+const { handleReaction } = require('./commands/reactionRoles');
 
 // Initialize the bot client
 const client = new Client({
@@ -25,7 +26,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB connection error:', err);
   });
 
-// Load command files
+// Load all command files from the commands folder
 client.commands = new Map();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -58,7 +59,6 @@ client.on('messageCreate', message => {
     } catch (err) {
       console.error(err);
     }
-
     return;
   }
 
