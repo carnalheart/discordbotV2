@@ -16,7 +16,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle('+ 𝑯𝒊𝒂𝒕𝒖𝒔')
-          .setDescription(`You have been given the <@&${roleId}> role. Please run \`-hiatus\` to remove it.`)
+          .setDescription(`You have been given the hiatus role. Please run \`-hiatus\` to remove it.`)
           .setColor(0x23272A);
 
         message.reply({ embeds: [embed] });
@@ -29,7 +29,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle('- 𝑯𝒊𝒂𝒕𝒖𝒔')
-          .setDescription(`The <@&${roleId}> role has been removed. Welcome back!`)
+          .setDescription(`The hiatus role has been removed. Welcome back!`)
           .setColor(0x23272A);
 
         message.reply({ embeds: [embed] });
