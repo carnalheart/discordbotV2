@@ -1,8 +1,10 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 
-// Create bot client with necessary intents
+// Initialize the bot client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -20,21 +22,39 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB connection error:', err);
   });
 
+// Load command files from /commands
+client.commands = new Map();
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+  const command = require(`./commands/${file}`);
+  client.commands.set(command.name, command);
+}
+
 // When bot is ready
 client.once('ready', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// Handle incoming messages
+// Handle message commands with '.' prefix
+const prefix = '.';
+
 client.on('messageCreate', message => {
-  if (message.author.bot) return;
+  if (message.author.bot || !message.content.startsWith(prefix)) return;
 
-  const msg = message.content.toLowerCase();
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const commandName = args.shift().toLowerCase();
 
-  if (msg === 'ping') {
-    message.channel.send('pong');
+  const command = client.commands.get(commandName);
+  if (!command) return;
+
+  try {
+    command.execute(message, args);
+  } catch (err) {
+    console.error(err);
+    message.reply('❌ Something went wrong while running that command.');
   }
 });
 
-// Login using token from .env
+// Log in the bot
 client.login(process.env.TOKEN);
