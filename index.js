@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const handleReaction = require('./commands/reactionRoles');
 const initLogger = require('./commands/logger');
 const initWelcomer = require('./welcomer');
+const initStickyMessage = require('./stickyMessage'); // 📌 Sticky reminder system
 
 const client = new Client({
   intents: [
@@ -52,6 +53,7 @@ client.once('ready', () => {
 
   initLogger(client);
   initWelcomer(client);
+  initStickyMessage(client); // 📌 activate sticky messages
 });
 
 const prefix = '.';
