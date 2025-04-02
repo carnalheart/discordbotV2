@@ -30,9 +30,18 @@ mongoose.connect(process.env.MONGO_URI)
 // Load commands
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
-  client.commands.set(command.data.name, command); // for slash commands
+
+  // Slash commands
+  if (command.data && command.data.name) {
+    client.commands.set(command.data.name, command);
+  }
+  // Prefix-only commands
+  else if (command.name) {
+    client.commands.set(command.name, command);
+  }
 }
 
 // Load events
@@ -85,12 +94,13 @@ client.on('messageCreate', message => {
     return;
   }
 
-  // Special messages
+  // Special message triggers
   const turnkeyCommand = client.commands.get('turnkey');
   if (message.content === 'turn key' && turnkeyCommand) return turnkeyCommand.execute(message);
 
   const hiatusCommand = client.commands.get('hiatus');
-  if ((message.content === '+hiatus' || message.content === '-hiatus') && hiatusCommand) return hiatusCommand.execute(message);
+  if ((message.content === '+hiatus' || message.content === '-hiatus') && hiatusCommand)
+    return hiatusCommand.execute(message);
 });
 
 // Handle reaction roles
