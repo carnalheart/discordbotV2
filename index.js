@@ -1,12 +1,13 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 const mongoose = require('mongoose');
+
 const handleReaction = require('./commands/reactionRoles');
 const initLogger = require('./commands/logger');
 const initWelcomer = require('./welcomer');
-const initStickyMessage = require('./stickyMessage'); // 📌 Sticky reminder system
+const initStickyMessage = require('./stickyMessage');
 
 const client = new Client({
   intents: [
@@ -23,19 +24,27 @@ const client = new Client({
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB!');
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
-  });
+  .then(() => console.log('✅ Connected to MongoDB!'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Load commands
-client.commands = new Map();
+client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
-  client.commands.set(command.name, command);
+  client.commands.set(command.data.name, command); // for slash commands
+}
+
+// Load events
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
+  const event = require(path.join(eventsPath, file));
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
 }
 
 client.once('ready', () => {
@@ -53,7 +62,7 @@ client.once('ready', () => {
 
   initLogger(client);
   initWelcomer(client);
-  initStickyMessage(client); // 📌 activate sticky messages
+  initStickyMessage(client);
 });
 
 const prefix = '.';
@@ -61,12 +70,11 @@ const prefix = '.';
 client.on('messageCreate', message => {
   if (message.author.bot) return;
 
-  // Prefixed commands
+  // Prefix commands
   if (message.content.startsWith(prefix)) {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
     const command = client.commands.get(commandName);
-
     if (!command || command.isSilent) return;
 
     try {
@@ -77,24 +85,18 @@ client.on('messageCreate', message => {
     return;
   }
 
-  // "turn key"
+  // Special messages
   const turnkeyCommand = client.commands.get('turnkey');
-  if (message.content === 'turn key' && turnkeyCommand) {
-    return turnkeyCommand.execute(message);
-  }
+  if (message.content === 'turn key' && turnkeyCommand) return turnkeyCommand.execute(message);
 
-  // "+hiatus" / "-hiatus"
   const hiatusCommand = client.commands.get('hiatus');
-  if ((message.content === '+hiatus' || message.content === '-hiatus') && hiatusCommand) {
-    return hiatusCommand.execute(message);
-  }
+  if ((message.content === '+hiatus' || message.content === '-hiatus') && hiatusCommand) return hiatusCommand.execute(message);
 });
 
+// Handle reaction roles
 client.on('messageReactionAdd', (reaction, user) => {
   if (reaction.partial) {
-    reaction.fetch()
-      .then(full => handleReaction(full, user, true))
-      .catch(console.error);
+    reaction.fetch().then(full => handleReaction(full, user, true)).catch(console.error);
   } else {
     handleReaction(reaction, user, true);
   }
@@ -102,9 +104,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 
 client.on('messageReactionRemove', (reaction, user) => {
   if (reaction.partial) {
-    reaction.fetch()
-      .then(full => handleReaction(full, user, false))
-      .catch(console.error);
+    reaction.fetch().then(full => handleReaction(full, user, false)).catch(console.error);
   } else {
     handleReaction(reaction, user, false);
   }
