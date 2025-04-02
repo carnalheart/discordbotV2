@@ -1,5 +1,4 @@
 const {
-    SlashCommandBuilder,
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
@@ -9,13 +8,17 @@ const {
   const { panelChannelId } = require('../config.json');
   
   module.exports = {
-    data: new SlashCommandBuilder()
-      .setName('deployticket')
-      .setDescription('Deploy the support ticket panel (admin only)')
-      .setDefaultMemberPermissions(0),
+    name: 'deployticket',
+    description: 'Post the support ticket panel (admin only)',
   
-    async execute(interaction) {
-      console.log('📨 /deployticket triggered by', interaction.user.tag);
+    async execute(message) {
+      // Only allow admins to run this
+      if (!message.member.permissions.has('Administrator')) {
+        return message.reply({
+          content: '❌ You do not have permission to use this command.',
+          ephemeral: true,
+        });
+      }
   
       const embed = new EmbedBuilder()
         .setTitle('⚜️ ― 𝑺𝒆𝒓𝒗𝒆𝒓 𝑺𝒖𝒑𝒑𝒐𝒓𝒕')
@@ -35,28 +38,24 @@ const {
       );
   
       try {
-        console.log('📡 Fetching panel channel:', panelChannelId);
-        const panelChannel = await interaction.client.channels.fetch(panelChannelId);
-        console.log('✅ Channel found:', panelChannel.name);
-  
+        const panelChannel = await message.client.channels.fetch(panelChannelId);
         await panelChannel.send({ embeds: [embed], components: [button] });
   
-        await interaction.reply({
-          content: '✅ Ticket panel successfully sent.',
+        await message.reply({
+          content: '✅ Ticket panel sent!',
           ephemeral: true,
         });
   
-        console.log('🎉 Ticket panel sent successfully.');
-      } catch (err) {
-        console.error('❌ Error in deployticket:', err);
-  
-        // Fallback interaction reply if something goes wrong
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({
-            content: '❌ Failed to send the ticket panel. Check bot permissions and channel ID.',
-            ephemeral: true,
-          });
+        // Optionally delete the message that triggered it
+        if (message.channel.id !== panelChannelId) {
+          message.delete().catch(() => {});
         }
+  
+      } catch (err) {
+        console.error('❌ Failed to send panel:', err);
+        await message.reply({
+          content: '❌ Could not send the panel. Check bot permissions and channel ID.',
+        });
       }
     },
   };  
