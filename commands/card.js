@@ -8,12 +8,12 @@ module.exports = {
   async execute(message, args) {
     const name = args[0]?.trim();
     if (!name || args.length > 1) {
-      return message.reply('❌ Please provide a character name. Example: `.card Vaelarys`');
+      return message.channel.send('❌ Please provide a character name. Example: `.card Vaelarys`');
     }
 
     const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });
     if (!character) {
-      return message.reply(`⚠️ No character found with the name **${name}**.`);
+      return message.channel.send(`⚠️ No character found with the name **${name}**.`);
     }
 
     const {
@@ -28,18 +28,17 @@ module.exports = {
     const health = Math.ceil(constitution / 2);
     const inventoryItems = {};
 
-    // count duplicates (if items are stored as strings)
     for (const item of character.inventory) {
       inventoryItems[item] = (inventoryItems[item] || 0) + 1;
     }
 
     const inventory = Object.entries(inventoryItems).map(
       ([item, count]) => `➺ **${item}** ・x${count}`
-    ).join('\n') || '_None_';
+    ).join('\n') || '*No items yet.*';
 
     const embed = new EmbedBuilder()
       .setTitle(`<:servericon:1343229799228899419> ― ${character.name}`)
-      .setDescription(`[Character biography.](https://example.com/)`) // placeholder link
+      .setDescription(`[Character biography.](https://example.com/)`) // placeholder
       .setColor('#23272A')
       .addFields(
         {
@@ -67,7 +66,7 @@ module.exports = {
           value: inventory
         }
       )
-      .setImage(character.image || 'https://i.imgur.com/0TeacfY.png')
+      .setImage(character.image || 'https://i.imgur.com/5c3aNMa.png?quality=lossless')
       .setFooter({
         text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.'
       });

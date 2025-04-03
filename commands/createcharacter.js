@@ -1,9 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
 const path = require('path');
-
-// ✅ debug: print the resolved path to character.js
-console.log('🧭 Trying to load Character model from:', path.resolve(__dirname, '../models/character'));
-
 const Character = require(path.resolve(__dirname, '../models/character'));
 
 module.exports = {
@@ -13,16 +9,15 @@ module.exports = {
   async execute(message, args) {
     const name = args[0]?.trim();
     if (!name || args.length > 1) {
-      return message.reply('❌ Please provide a **single-word** name. Example: `.createcharacter Vaelarys`');
+      return message.channel.send('Please provide a **single-word** name. Example: `.createcharacter Vaelarys`');
     }
 
-    // check case-insensitive duplicate
     const existing = await Character.findOne({
       name: { $regex: new RegExp(`^${name}$`, 'i') }
     });
 
     if (existing) {
-      return message.reply('⚠️ A character with that name already exists (case-insensitive).');
+      return message.channel.send('A character with that name already exists (case-insensitive).');
     }
 
     const newChar = new Character({
@@ -48,6 +43,11 @@ module.exports = {
 
     await newChar.save();
 
-    message.reply(`✅ Character **${name}** has been created!`);
+    const embed = new EmbedBuilder()
+      .setTitle('― Character Created!')
+      .setDescription(`${name} has been successfully created. Run \`.card\` to view their information.`)
+      .setColor('#23272A');
+
+    await message.channel.send({ embeds: [embed] });
   }
 };
