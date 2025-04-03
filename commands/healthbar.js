@@ -23,7 +23,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle(`― ${character.name}'s Health Bar`)
-      .setDescription(`**${character.hpCurrent}/${character.hpMax}**`)
+      .setDescription(`**${character.hpCurrent}/${character.hpMax} HP**`)
       .setColor('#23272A');
 
     await message.channel.send({ embeds: [embed] });

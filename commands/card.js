@@ -8,12 +8,12 @@ module.exports = {
   async execute(message, args) {
     const name = args[0]?.trim();
     if (!name || args.length > 1) {
-      return message.channel.send('❌ Please provide a character name. Example: `.card Vaelarys`');
+      return message.channel.send('Please provide a character name. Example: `.card Vaelarys`');
     }
 
     const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });
     if (!character) {
-      return message.channel.send(`⚠️ No character found with the name **${name}**.`);
+      return message.channel.send(`No character found with the name **${name}**.`);
     }
 
     const {

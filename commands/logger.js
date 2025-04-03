@@ -1,80 +1,221 @@
-const logChannelId = '1356705653107851364';
-
-function logEvent(content, guild) {
-  const logChannel = guild.channels.cache.get(logChannelId);
-  if (logChannel) logChannel.send({ content }).catch(console.error);
-}
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
-  client.on('messageCreate', message => {
-    if (message.author.bot) return;
-    logEvent(`📩 **Message sent** in <#${message.channel.id}> by ${message.author.tag}:\n${message.content}`, message.guild);
+  const LOG_CHANNEL_ID = 'YOUR_LOG_CHANNEL_ID_HERE';
+
+  const log = async (embed) => {
+    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
+    if (logChannel) logChannel.send({ embeds: [embed] });
+  };
+
+  const sanitize = (content) =>
+    content
+      ?.replace(/<@!?(\d+)>/g, (_, id) => `@User(${id})`)
+      .replace(/<@&(\d+)>/g, (_, id) => `@Role(${id})`)
+      .replace(/<#(\d+)>/g, (_, id) => `#Channel(${id})`)
+      .replace(/`/g, "'");
+
+  // message delete
+  client.on('messageDelete', async (message) => {
+    if (message.author?.bot || !message.guild) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle('Message Deleted')
+      .setDescription(`**User:** ${message.author.tag} (${message.author.id})\n**Channel:** #${message.channel.name}`)
+      .addFields({ name: 'Content', value: sanitize(message.content) || '*[no text]*' })
+      .setColor('#23272A')
+      .setTimestamp();
+
+    log(embed);
   });
 
-  client.on('messageDelete', message => {
-    if (!message.guild || message.author?.bot) return;
-    logEvent(`🗑️ **Message deleted** in <#${message.channel.id}> by ${message.author?.tag || 'Unknown'}:\n${message.content}`, message.guild);
+  // message edit
+  client.on('messageUpdate', async (oldMsg, newMsg) => {
+    if (oldMsg.author?.bot || !oldMsg.guild || oldMsg.content === newMsg.content) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle('Message Edited')
+      .setDescription(`**User:** ${oldMsg.author.tag} (${oldMsg.author.id})\n**Channel:** #${oldMsg.channel.name}`)
+      .addFields(
+        { name: 'Before', value: sanitize(oldMsg.content) || '*[no text]*' },
+        { name: 'After', value: sanitize(newMsg.content) || '*[no text]*' }
+      )
+      .setColor('#23272A')
+      .setTimestamp();
+
+    log(embed);
   });
 
-  client.on('messageUpdate', (oldMsg, newMsg) => {
-    if (!newMsg.guild || oldMsg.content === newMsg.content) return;
-    logEvent(`✏️ **Message edited** in <#${newMsg.channel.id}> by ${newMsg.author?.tag}:\n**Before:** ${oldMsg.content}\n**After:** ${newMsg.content}`, newMsg.guild);
+  // member join/leave
+  client.on('guildMemberAdd', (member) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Member Joined')
+      .setDescription(`${member.user.tag} (${member.id}) joined the server.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
   });
 
-  client.on('guildMemberAdd', member => {
-    logEvent(`➕ **${member.user.tag}** joined the server.`, member.guild);
+  client.on('guildMemberRemove', (member) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Member Left')
+      .setDescription(`${member.user.tag} (${member.id}) left or was removed.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
   });
 
-  client.on('guildMemberRemove', member => {
-    logEvent(`➖ **${member.user.tag}** left or was removed from the server.`, member.guild);
+  // ban/unban
+  client.on('guildBanAdd', (ban) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Member Banned')
+      .setDescription(`${ban.user.tag} (${ban.user.id}) was banned.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
   });
 
-  client.on('messageReactionAdd', (reaction, user) => {
-    if (reaction.partial) {
-      reaction.fetch()
-        .then(full => logEvent(`➕ **${user.tag}** added reaction ${full.emoji} in <#${full.message.channel.id}>`, full.message.guild))
-        .catch(console.error);
-    } else {
-      logEvent(`➕ **${user.tag}** added reaction ${reaction.emoji} in <#${reaction.message.channel.id}>`, reaction.message.guild);
-    }
+  client.on('guildBanRemove', (ban) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Member Unbanned')
+      .setDescription(`${ban.user.tag} (${ban.user.id}) was unbanned.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
   });
 
-  client.on('messageReactionRemove', (reaction, user) => {
-    if (reaction.partial) {
-      reaction.fetch()
-        .then(full => logEvent(`➖ **${user.tag}** removed reaction ${full.emoji} in <#${full.message.channel.id}>`, full.message.guild))
-        .catch(console.error);
-    } else {
-      logEvent(`➖ **${user.tag}** removed reaction ${reaction.emoji} in <#${reaction.message.channel.id}>`, reaction.message.guild);
-    }
-  });
-
+  // nickname change
   client.on('guildMemberUpdate', (oldMember, newMember) => {
     if (oldMember.nickname !== newMember.nickname) {
-      logEvent(`📝 **${newMember.user.tag}** changed nickname:\n**Before:** ${oldMember.nickname || 'none'}\n**After:** ${newMember.nickname || 'none'}`, newMember.guild);
+      const embed = new EmbedBuilder()
+        .setTitle('Nickname Changed')
+        .setDescription(`${newMember.user.tag} (${newMember.id}) changed their nickname.`)
+        .addFields(
+          { name: 'Old', value: oldMember.nickname || '*None*', inline: true },
+          { name: 'New', value: newMember.nickname || '*None*', inline: true }
+        )
+        .setColor('#23272A')
+        .setTimestamp();
+      log(embed);
     }
-
-    const addedRoles = newMember.roles.cache.filter(r => !oldMember.roles.cache.has(r.id));
-    const removedRoles = oldMember.roles.cache.filter(r => !newMember.roles.cache.has(r.id));
-
-    addedRoles.forEach(role => {
-      logEvent(`🎭 **${newMember.user.tag}** was given role <@&${role.id}>`, newMember.guild);
-    });
-
-    removedRoles.forEach(role => {
-      logEvent(`🎭 **${newMember.user.tag}** had role <@&${role.id}> removed`, newMember.guild);
-    });
   });
 
-  client.on('voiceStateUpdate', (oldState, newState) => {
-    const member = newState.member;
+  // channel create/delete/update
+  client.on('channelCreate', (channel) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Channel Created')
+      .setDescription(`#${channel.name} (${channel.id}) was created.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
 
-    if (!oldState.channel && newState.channel) {
-      logEvent(`🎙️ **${member.user.tag}** joined voice channel **${newState.channel.name}**`, member.guild);
-    } else if (oldState.channel && !newState.channel) {
-      logEvent(`🔇 **${member.user.tag}** left voice channel **${oldState.channel.name}**`, member.guild);
-    } else if (oldState.channel?.id !== newState.channel?.id) {
-      logEvent(`🔁 **${member.user.tag}** switched from **${oldState.channel.name}** to **${newState.channel.name}**`, member.guild);
+  client.on('channelDelete', (channel) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Channel Deleted')
+      .setDescription(`#${channel.name} (${channel.id}) was deleted.`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
+
+  client.on('channelUpdate', (oldChannel, newChannel) => {
+    if (oldChannel.name !== newChannel.name) {
+      const embed = new EmbedBuilder()
+        .setTitle('Channel Renamed')
+        .setDescription(`Channel ID: ${newChannel.id}`)
+        .addFields(
+          { name: 'Old Name', value: oldChannel.name, inline: true },
+          { name: 'New Name', value: newChannel.name, inline: true }
+        )
+        .setColor('#23272A')
+        .setTimestamp();
+      log(embed);
+    }
+  });
+
+  // role create/delete/update
+  client.on('roleCreate', (role) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Role Created')
+      .setDescription(`Role: ${role.name} (${role.id})`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
+
+  client.on('roleDelete', (role) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Role Deleted')
+      .setDescription(`Role: ${role.name} (${role.id})`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
+
+  client.on('roleUpdate', (oldRole, newRole) => {
+    if (oldRole.name !== newRole.name) {
+      const embed = new EmbedBuilder()
+        .setTitle('Role Renamed')
+        .addFields(
+          { name: 'Old Name', value: oldRole.name, inline: true },
+          { name: 'New Name', value: newRole.name, inline: true }
+        )
+        .setColor('#23272A')
+        .setTimestamp();
+      log(embed);
+    }
+  });
+
+  // guild update
+  client.on('guildUpdate', (oldGuild, newGuild) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Server Updated')
+      .setColor('#23272A')
+      .setTimestamp();
+
+    if (oldGuild.name !== newGuild.name) {
+      embed.setDescription(`**Name changed:**\n${oldGuild.name} → ${newGuild.name}`);
+    } else if (oldGuild.icon !== newGuild.icon) {
+      embed.setDescription(`**Server icon was updated.**`);
+      if (newGuild.iconURL()) embed.setThumbnail(newGuild.iconURL());
+    } else {
+      return;
+    }
+
+    log(embed);
+  });
+
+  // emoji changes
+  client.on('emojiCreate', (emoji) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Emoji Created')
+      .setDescription(`New emoji: \`${emoji.name}\` (${emoji.id})`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
+
+  client.on('emojiDelete', (emoji) => {
+    const embed = new EmbedBuilder()
+      .setTitle('Emoji Deleted')
+      .setDescription(`Deleted emoji: \`${emoji.name}\` (${emoji.id})`)
+      .setColor('#23272A')
+      .setTimestamp();
+    log(embed);
+  });
+
+  client.on('emojiUpdate', (oldEmoji, newEmoji) => {
+    if (oldEmoji.name !== newEmoji.name) {
+      const embed = new EmbedBuilder()
+        .setTitle('Emoji Renamed')
+        .addFields(
+          { name: 'Old Name', value: oldEmoji.name, inline: true },
+          { name: 'New Name', value: newEmoji.name, inline: true }
+        )
+        .setColor('#23272A')
+        .setTimestamp();
+      log(embed);
     }
   });
 };
