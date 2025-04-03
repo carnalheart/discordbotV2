@@ -10,7 +10,7 @@ module.exports = {
     const link = args[1]?.trim();
 
     if (!name || !link || args.length !== 2) {
-      return message.channel.send('Please provide the character name and a valid bio link. Example: `.setbio Vaelarys https://yourlink.com`');
+      return message.channel.send('Please provide the character name and a valid bio link. Example: `.setbio Meralith https://yourlink.com`');
     }
 
     const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });
