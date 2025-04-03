@@ -30,7 +30,7 @@ const {
   
         if (existing) {
           return interaction.reply({
-            content: `❌ You already have a ticket open: ${existing}`,
+            content: `You already have a ticket open: ${existing}`,
             ephemeral: true,
           });
         }
@@ -87,7 +87,7 @@ const {
         });
   
         await interaction.reply({
-          content: `🎟️ Ticket created: ${channel}`,
+          content: `Ticket opened: ${channel}`,
           ephemeral: true,
         });
       }
@@ -95,7 +95,7 @@ const {
       if (customId === 'close_ticket') {
         if (!member.roles.cache.has(staffRoleId)) {
           return interaction.reply({
-            content: '❌ Only staff can close tickets.',
+            content: 'Only staff can close tickets.',
             ephemeral: true,
           });
         }
@@ -104,7 +104,7 @@ const {
         await interaction.channel.lockPermissions();
   
         await interaction.reply({
-          content: '✅ Ticket closed and moved to archive.',
+          content: 'Your ticket was closed. If this was a mistake please take a screenshot and open a new ticket detailing your issue.',
           ephemeral: true,
         });
       }

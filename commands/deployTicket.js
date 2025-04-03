@@ -15,7 +15,7 @@ const {
       // Only allow admins to run this
       if (!message.member.permissions.has('Administrator')) {
         return message.reply({
-          content: '❌ You do not have permission to use this command.',
+          content: 'You do not have permission to use this command.',
           ephemeral: true,
         });
       }
@@ -33,7 +33,7 @@ const {
       const button = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('open_ticket')
-          .setLabel('🎟️')
+          .setLabel('🎫')
           .setStyle(ButtonStyle.Danger)
       );
   
@@ -42,7 +42,7 @@ const {
         await panelChannel.send({ embeds: [embed], components: [button] });
   
         await message.reply({
-          content: '✅ Ticket panel sent!',
+          content: 'Ticket panel sent!',
           ephemeral: true,
         });
   
@@ -52,9 +52,9 @@ const {
         }
   
       } catch (err) {
-        console.error('❌ Failed to send panel:', err);
+        console.error('Failed to send panel:', err);
         await message.reply({
-          content: '❌ Could not send the panel. Check bot permissions and channel ID.',
+          content: 'Could not send the panel. Check bot permissions and channel ID.',
         });
       }
     },
