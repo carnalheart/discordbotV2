@@ -18,7 +18,11 @@ const characterSchema = new mongoose.Schema({
     silver: { type: Number, default: 0 },
     gold: { type: Number, default: 0 }
   },
-  inventory: { type: [String], default: [] }
+  inventory: { type: [String], default: [] },
+
+  // new HP system
+  hpCurrent: { type: Number, default: null },
+  hpMax: { type: Number, default: null }
 });
 
 module.exports = mongoose.model('Character', characterSchema);

@@ -8,12 +8,12 @@ module.exports = {
   async execute(message, args) {
     const name = args[0]?.trim();
     if (!name || args.length > 1) {
-      return message.channel.send('Please provide a character name. Example: `.card Vaelarys`');
+      return message.channel.send('❌ Please provide a character name. Example: `.card Vaelarys`');
     }
 
     const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });
     if (!character) {
-      return message.channel.send(`No character found with the name **${name}**.`);
+      return message.channel.send(`⚠️ No character found with the name **${name}**.`);
     }
 
     const {
@@ -25,9 +25,10 @@ module.exports = {
       charisma
     } = character.stats;
 
-    const health = Math.ceil(constitution / 2);
-    const inventoryItems = {};
+    const hpCurrent = character.hpCurrent ?? 0;
+    const hpMax = character.hpMax ?? 0;
 
+    const inventoryItems = {};
     for (const item of character.inventory) {
       inventoryItems[item] = (inventoryItems[item] || 0) + 1;
     }
@@ -54,7 +55,7 @@ module.exports = {
             `➺ **Intelligence** ・ ${intelligence}`,
             `➺ **Wisdom** ・ ${wisdom}`,
             `➺ **Charisma** ・ ${charisma}`,
-            `➺ **Health Points** ・ ${health}`
+            `➺ **Health Points** ・ ${hpCurrent}/${hpMax}`
           ].join('\n')
         },
         {
