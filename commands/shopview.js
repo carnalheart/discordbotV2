@@ -11,19 +11,23 @@ module.exports = {
     const totalPages = Math.ceil(items.length / itemsPerPage);
 
     let page = 1;
-    const start = (page - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const pageItems = items.slice(start, end);
 
-    const itemList = pageItems.map(item => {
-      return `➺ **${item.name}** ・ **${item.value}** server credits <:C_servercredit:1346130709290422312> — ${item.description}`;
-    }).join('\n');
+    const buildEmbed = (page) => {
+      const start = (page - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = items.slice(start, end);
 
-    const embed = new EmbedBuilder()
-      .setTitle('<:A_asoiaf_servericon:1343229799228899419> ― Server Shop')
-      .setDescription(itemList)
-      .setFooter({ text: 'Spend your server credits with .shopbuy <item>' })
-      .setColor('#23272A');
+      const itemList = pageItems.map(item => {
+        return `➺ **${item.name}** ・ **${item.value}** server credits <:C_servercredit:1346130709290422312> — ${item.description}`;
+      }).join('\n');
+
+      return new EmbedBuilder()
+        .setTitle('― Server Shop')
+        .setDescription(itemList)
+        .setImage('https://media.discordapp.net/attachments/1344353226123640885/1357754680725209338/Server-Shop-04-04-2025.png?ex=67f15b15&is=67f00995&hm=de74756cd297e77d9d3bec7e9f0ddc854a47e6c2af3d4179df0dc2e80c5d3c9b&=&format=webp&quality=lossless&width=1280&height=291')
+        .setFooter({ text: 'Spend your server credits with .shopbuy <item>' })
+        .setColor('#23272A');
+    };
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -36,7 +40,7 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    const msg = await message.channel.send({ embeds: [embed], components: [row] });
+    const msg = await message.channel.send({ embeds: [buildEmbed(page)], components: [row] });
 
     const collector = msg.createMessageComponentCollector({ time: 60000 });
 
@@ -44,16 +48,7 @@ module.exports = {
       if (i.customId === 'shop_left' && page > 1) page--;
       else if (i.customId === 'shop_right' && page < totalPages) page++;
 
-      const start = (page - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const pageItems = items.slice(start, end);
-
-      const itemList = pageItems.map(item => {
-        return `➺ **${item.name}** ・ **${item.value}** server credits <:C_servercredit:1346130709290422312> — ${item.description}`;
-      }).join('\n');
-
-      const updatedEmbed = EmbedBuilder.from(embed).setDescription(itemList);
-      await i.update({ embeds: [updatedEmbed], components: [row] });
+      await i.update({ embeds: [buildEmbed(page)], components: [row] });
     });
   }
 };

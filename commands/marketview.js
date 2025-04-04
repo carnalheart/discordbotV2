@@ -35,21 +35,25 @@ module.exports = {
     const totalPages = Math.ceil(items.length / itemsPerPage);
 
     let page = 1;
-    const start = (page - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const pageItems = items.slice(start, end);
 
-    const itemList = pageItems.map(item => {
-      const cost = formatCurrency(item.value, item.currency);
-      const effect = item.effect ? `— ${item.effect}` : '';
-      return `➺ ${item.emoji} **${item.name}** ・ ${item.rarity} ${item.type} ・ **${cost}** ${effect}`;
-    }).join('\n');
+    const buildEmbed = (page) => {
+      const start = (page - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = items.slice(start, end);
 
-    const embed = new EmbedBuilder()
-      .setTitle('<:servericon:1343229799228899419> ― RPG Market')
-      .setDescription(itemList)
-      .setFooter({ text: 'Have your character purchase an item with .marketbuy <character> <item> <quantity>' })
-      .setColor('#23272A');
+      const itemList = pageItems.map(item => {
+        const cost = formatCurrency(item.value, item.currency);
+        const effect = item.effect ? `— ${item.effect}` : '';
+        return `➺ ${item.emoji} **${item.name}** ・ ${item.rarity} ${item.type} ・ **${cost}** ${effect}`;
+      }).join('\n');
+
+      return new EmbedBuilder()
+        .setTitle('<:servericon:1343229799228899419> ― RPG Market')
+        .setDescription(itemList)
+        .setImage('https://media.discordapp.net/attachments/1344353226123640885/1357754870094102599/RPG-Market-04-04-20252.png?ex=67f15b42&is=67f009c2&hm=a3e13e296a52a708931cc2c075c6d2d6dd6f92e780abfd234aacbd87619bf723&=&format=webp&quality=lossless&width=1280&height=270')
+        .setFooter({ text: 'Have your character purchase an item with .marketbuy <character> <item> <quantity>' })
+        .setColor('#23272A');
+    };
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -62,7 +66,7 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    const msg = await message.channel.send({ embeds: [embed], components: [row] });
+    const msg = await message.channel.send({ embeds: [buildEmbed(page)], components: [row] });
 
     const collector = msg.createMessageComponentCollector({ time: 60000 });
 
@@ -70,18 +74,7 @@ module.exports = {
       if (i.customId === 'market_left' && page > 1) page--;
       else if (i.customId === 'market_right' && page < totalPages) page++;
 
-      const start = (page - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const pageItems = items.slice(start, end);
-
-      const itemList = pageItems.map(item => {
-        const cost = formatCurrency(item.value, item.currency);
-        const effect = item.effect ? `— ${item.effect}` : '';
-        return `➺ ${item.emoji} **${item.name}** ・ ${item.rarity} ${item.type} ・ **${cost}** ${effect}`;
-      }).join('\n');
-
-      const updatedEmbed = EmbedBuilder.from(embed).setDescription(itemList);
-      await i.update({ embeds: [updatedEmbed], components: [row] });
+      await i.update({ embeds: [buildEmbed(page)], components: [row] });
     });
   }
 };
