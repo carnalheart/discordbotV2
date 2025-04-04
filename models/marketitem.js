@@ -5,8 +5,10 @@ const MarketItemSchema = new mongoose.Schema({
   type: String,
   rarity: String,
   value: Number,
-  currency: String, // ✅ THIS MUST EXIST
-  effect: String // optional
+  currency: String,
+  effect: String,
+  emoji: String,
+  description: String
 });
 
 module.exports = mongoose.model('MarketItem', MarketItemSchema);
