@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const Character = require('../models/character');
+const Character = require('../models/marketitem'); // if needed, update to ../models/character
 const MarketItem = require('../models/marketitem');
 
 const rates = {
@@ -10,21 +10,6 @@ const rates = {
 
 function convertToCopper(value, currency) {
   return value * rates[currency];
-}
-
-function breakdownCopper(totalCopper) {
-  if (isNaN(totalCopper) || totalCopper < 0) return { gold: 0, silver: 0, copper: 0 };
-
-  const gold = Math.floor(totalCopper / rates.gold);
-  const remainingAfterGold = totalCopper % rates.gold;
-  const silver = Math.floor(remainingAfterGold / rates.silver);
-  const copper = remainingAfterGold % rates.silver;
-
-  return {
-    gold: Number.isFinite(gold) ? gold : 0,
-    silver: Number.isFinite(silver) ? silver : 0,
-    copper: Number.isFinite(copper) ? copper : 0
-  };
 }
 
 module.exports = {
@@ -44,7 +29,9 @@ module.exports = {
     if (!character) return message.channel.send(`⚠️ Character **${charName}** not found.`);
 
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
-    if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
+    if (!item || !item.currency || !rates[item.currency]) {
+      return message.channel.send(`⚠️ Item **${itemName}** not found or has an invalid currency.`);
+    }
 
     if (!character.coins) {
       character.coins = { gold: 0, silver: 0, copper: 0 };
@@ -60,10 +47,11 @@ module.exports = {
       character.coins.silver * rates.silver +
       character.coins.copper;
 
-    const remainingCopper = charTotalCopper - totalCostCopper;
-    const change = breakdownCopper(remainingCopper);
+    if (charTotalCopper < totalCostCopper) {
+      return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
+    }
 
-    // 🔍 transaction log for debugging
+    // Log before deduction
     console.log('🧾 transaction log:', {
       item: item.name,
       cost: item.value,
@@ -71,26 +59,38 @@ module.exports = {
       quantity,
       totalCostCopper,
       charTotalCopper,
-      remainingCopper,
-      change,
-      charCoinsBefore: character.coins
+      charCoinsBefore: { ...character.coins }
     });
 
-    if (charTotalCopper < totalCostCopper || totalCostCopper <= 0) {
-      return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
+    // 💰 Deduct from actual coin fields (gold → silver → copper)
+    let remaining = totalCostCopper;
+
+    // Deduct gold
+    const goldValue = character.coins.gold * rates.gold;
+    if (goldValue > 0) {
+      const usedGold = Math.min(remaining, goldValue);
+      const goldToRemove = Math.floor(usedGold / rates.gold);
+      character.coins.gold -= goldToRemove;
+      remaining -= goldToRemove * rates.gold;
     }
 
-    if (
-      typeof change.gold !== 'number' ||
-      typeof change.silver !== 'number' ||
-      typeof change.copper !== 'number'
-    ) {
-      return message.channel.send('❌ Purchase failed due to invalid coin breakdown.');
+    // Deduct silver
+    const silverValue = character.coins.silver * rates.silver;
+    if (silverValue > 0 && remaining > 0) {
+      const usedSilver = Math.min(remaining, silverValue);
+      const silverToRemove = Math.floor(usedSilver / rates.silver);
+      character.coins.silver -= silverToRemove;
+      remaining -= silverToRemove * rates.silver;
     }
 
-    character.coins.gold = change.gold;
-    character.coins.silver = change.silver;
-    character.coins.copper = change.copper;
+    // Deduct copper
+    if (character.coins.copper >= remaining) {
+      character.coins.copper -= remaining;
+      remaining = 0;
+    } else {
+      character.coins.copper = 0;
+      remaining = 0; // should never hit this, just safety
+    }
 
     for (let i = 0; i < quantity; i++) {
       character.inventory.push(item.name);
@@ -100,7 +100,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle('― Item Purchased!')
-      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${item.value * quantity} ${item.currency ?? 'copper'}**. View it in their inventory with \`.card\`.`)
+      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${item.value * quantity} ${item.currency}**. View it in their inventory with \`.card\`.`)
       .setColor('#23272A');
 
     return message.channel.send({ embeds: [embed] });
