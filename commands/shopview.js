@@ -24,7 +24,6 @@ module.exports = {
       return new EmbedBuilder()
         .setTitle('― Server Shop')
         .setDescription(itemList)
-        .setImage('https://media.discordapp.net/attachments/1344353226123640885/1357754680725209338/Server-Shop-04-04-2025.png?ex=67f15b15&is=67f00995&hm=de74756cd297e77d9d3bec7e9f0ddc854a47e6c2af3d4179df0dc2e80c5d3c9b&=&format=webp&quality=lossless&width=1280&height=291')
         .setFooter({ text: 'Spend your server credits with .shopbuy <item>' })
         .setColor('#23272A');
     };
