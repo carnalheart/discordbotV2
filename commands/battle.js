@@ -98,7 +98,6 @@ module.exports = {
       const loserTotal = Math.min(char1Final, char2Final);
       const pointDiff = winnerTotal - loserTotal;
 
-      // 🩸 determine damage to loser
       let damage = 0;
       if (pointDiff <= 5) damage = 5;
       else if (pointDiff <= 9) damage = 3;
