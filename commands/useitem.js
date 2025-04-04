@@ -21,6 +21,15 @@ module.exports = {
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found.`);
 
+    // 🛡️ fallback for missing coins (future-proof)
+    if (!character.coins) {
+      character.coins = { gold: 0, silver: 0, copper: 0 };
+    } else {
+      character.coins.gold = character.coins.gold ?? 0;
+      character.coins.silver = character.coins.silver ?? 0;
+      character.coins.copper = character.coins.copper ?? 0;
+    }
+
     const inventory = character.inventory;
     const ownedQuantity = inventory.filter(i => i === item.name).length;
 

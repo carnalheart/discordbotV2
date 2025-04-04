@@ -46,12 +46,14 @@ module.exports = {
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
 
-    // 🛡️ fallback for missing coins field
-    character.coins = {
-      gold: character.coins?.gold ?? 0,
-      silver: character.coins?.silver ?? 0,
-      copper: character.coins?.copper ?? 0
-    };
+    // 🛡️ only patch missing coin fields — don't overwrite
+    if (!character.coins) {
+      character.coins = { gold: 0, silver: 0, copper: 0 };
+    } else {
+      character.coins.gold = character.coins.gold ?? 0;
+      character.coins.silver = character.coins.silver ?? 0;
+      character.coins.copper = character.coins.copper ?? 0;
+    }
 
     const totalCostCopper = convertToCopper(item.value, item.currency) * quantity;
     const charTotalCopper =
