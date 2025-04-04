@@ -20,7 +20,7 @@ module.exports = {
     }).join('\n');
 
     const embed = new EmbedBuilder()
-      .setTitle('― Server Shop')
+      .setTitle('<:A_asoiaf_servericon:1343229799228899419> ― Server Shop')
       .setDescription(itemList)
       .setFooter({ text: 'Spend your server credits with .shopbuy <item>' })
       .setColor('#23272A');
