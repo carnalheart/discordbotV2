@@ -2,16 +2,16 @@ const { EmbedBuilder } = require('discord.js');
 const ServerCredit = require('../models/servercredit');
 
 const messages = [
-  'delivered a dragonglass blade to Castle Black.',
-  'prayed to The Seven.',
-  'scaled the wall of the Red Keep.',
-  'completed the walk of shame.',
-  'drank mead with the royal family.',
-  'chased cats in Kings Landing.',
-  'crossed the Narrow Sea.',
-  'hatched a stone dragon egg.',
-  'won a jousting tourney.',
-  'found a hidden map leading them to a secret treasure chest.'
+  'delivered a dragonglass blade to Castle Black',
+  'prayed to The Seven',
+  'scaled the wall of the Red Keep',
+  'completed the walk of shame',
+  'drank mead with the royal family',
+  'chased cats in Kings Landing',
+  'crossed the Narrow Sea',
+  'hatched a stone dragon egg',
+  'won a jousting tourney',
+  'found a hidden map leading them to a secret treasure chest'
 ];
 
 const cooldowns = new Map();

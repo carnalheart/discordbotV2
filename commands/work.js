@@ -2,23 +2,23 @@ const { EmbedBuilder } = require('discord.js');
 const ServerCredit = require('../models/servercredit');
 
 const messages = [
-  'caught and sold a basket of fish.',
-  'spied for the Master Of Whisperers.',
-  'sold their sword.',
-  'worked the local tavern\'s bar.',
-  'delivered milk to the townsfolk.',
-  'cremated corpses after a lost battle.',
-  'scribed for a high lord.',
-  'gathered firewood.',
-  'crafted and sold a dragon saddle.',
-  'squired for a knight.',
-  'performed a ballad in the local tavern.',
-  'delivered a royal pardon.',
-  'sent the ravens.',
-  'assisted the Maesters of the Citadel with alchemy.',
-  'collected taxes.',
-  'worked as the Queen\'s handmaiden.',
-  'tutored a highborn child.'
+  'caught and sold a basket of fish',
+  'spied for the Master Of Whisperers',
+  'sold their sword',
+  'worked the local tavern\'s bar',
+  'delivered milk to the townsfolk',
+  'cremated corpses after a lost battle',
+  'scribed for a high lord',
+  'gathered firewood',
+  'crafted and sold a dragon saddle',
+  'squired for a knight',
+  'performed a ballad in the local tavern',
+  'delivered a royal pardon',
+  'sent the ravens',
+  'assisted the Maesters of the Citadel with alchemy',
+  'collected taxes',
+  'worked as the Queen\'s handmaiden',
+  'tutored a highborn child'
 ];
 
 const cooldowns = new Map();
