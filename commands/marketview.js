@@ -36,7 +36,6 @@ module.exports = {
       return new EmbedBuilder()
         .setTitle('<:servericon:1343229799228899419> ― RPG Market')
         .setDescription(display || '*No items available.*')
-        .setImage('https://media.discordapp.net/attachments/1344353226123640885/1357754870094102599/RPG-Market-04-04-20252.png?ex=67f15b42&is=67f009c2&hm=a3e13e296a52a708931cc2c075c6d2d6dd6f92e780abfd234aacbd87619bf723&=&format=webp&quality=lossless&width=1280&height=270')
         .setFooter({ text: `Page ${page + 1}/${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` })
         .setColor('#23272A');
     };
