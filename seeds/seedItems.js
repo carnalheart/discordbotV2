@@ -8,7 +8,9 @@ const items = [
     type: 'weapon',
     rarity: 'rare',
     value: 1,
-    currency: 'gold'
+    currency: 'gold',
+    emoji: '<:D_dagger_common:1357703384412721315>',
+    description: 'A short, sharp blade perfect for close combat.'
   },
   {
     name: 'Medicine',
@@ -16,14 +18,18 @@ const items = [
     rarity: 'rare',
     value: 5,
     currency: 'silver',
-    effect: 'Restores 5HP'
+    effect: 'Restores 5HP',
+    emoji: '<:D_medicine_rare:1357710107554873497>',
+    description: 'A rare medicinal mixture for stabilizing wounds.'
   },
   {
     name: 'Torch',
     type: 'utility',
     rarity: 'common',
     value: 3,
-    currency: 'copper'
+    currency: 'copper',
+    emoji: '<:D_torch_common:1357699386599145692>',
+    description: 'A basic light source for exploring dark places.'
   }
 ];
 

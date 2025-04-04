@@ -51,17 +51,6 @@ module.exports = {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
     }
 
-    // Log for debugging
-    console.log('🧾 transaction log:', {
-      item: item.name,
-      cost: item.value,
-      currency: item.currency,
-      quantity,
-      totalCostCopper,
-      charTotalCopper,
-      charCoinsBefore: { ...character.coins }
-    });
-
     // 💰 Deduct coins top-down (gold → silver → copper)
     let remaining = totalCostCopper;
 
