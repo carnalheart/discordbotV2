@@ -9,7 +9,6 @@ module.exports = {
 
   async execute(message) {
     const items = await MarketItem.find().sort({ name: 1 });
-
     if (!items.length) {
       return message.channel.send('⚠️ The market is currently empty.');
     }
@@ -22,7 +21,7 @@ module.exports = {
 
       const itemDescriptions = currentItems.map(item => {
         const effectText = item.effect ? ` — *${item.effect}*` : '';
-        return `➺ **${item.name}** ・ ${item.type}, ${item.rarity} ・ ${item.value} copper${effectText}`;
+        return `➺ **${item.name}** ・ ${item.type}, ${item.rarity} ・ ${item.value} ${item.currency}${effectText}`;
       }).join('\n');
 
       return new EmbedBuilder()
@@ -43,10 +42,7 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    const msg = await message.channel.send({
-      embeds: [generateEmbed()],
-      components: [row]
-    });
+    const msg = await message.channel.send({ embeds: [generateEmbed()], components: [row] });
 
     const collector = msg.createMessageComponentCollector({
       time: 60000,
@@ -57,17 +53,14 @@ module.exports = {
       if (interaction.customId === 'prev' && page > 0) page--;
       if (interaction.customId === 'next' && (page + 1) * ITEMS_PER_PAGE < items.length) page++;
 
-      await interaction.update({
-        embeds: [generateEmbed()],
-        components: [row]
-      });
+      await interaction.update({ embeds: [generateEmbed()], components: [row] });
     });
 
     collector.on('end', async () => {
       try {
         await msg.edit({ components: [] });
       } catch (e) {
-        // message may already be deleted
+        // ignore
       }
     });
   }

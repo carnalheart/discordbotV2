@@ -15,10 +15,8 @@ function convertToCopper(value, currency) {
 function breakdownCopper(totalCopper) {
   const gold = Math.floor(totalCopper / rates.gold);
   const remainingAfterGold = totalCopper % rates.gold;
-
   const silver = Math.floor(remainingAfterGold / rates.silver);
   const copper = remainingAfterGold % rates.silver;
-
   return { gold, silver, copper };
 }
 
@@ -41,28 +39,20 @@ module.exports = {
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
 
-    const totalCostInCopper = convertToCopper(item.value, item.currency) * quantity;
+    const totalCostCopper = convertToCopper(item.value, item.currency) * quantity;
+    const charTotalCopper = (character.coins.gold ?? 0) * rates.gold + (character.coins.silver ?? 0) * rates.silver + (character.coins.copper ?? 0);
 
-    const charGold = character.coins.gold ?? 0;
-    const charSilver = character.coins.silver ?? 0;
-    const charCopper = character.coins.copper ?? 0;
-
-    const charTotalCopper =
-      (charGold * rates.gold) + (charSilver * rates.silver) + charCopper;
-
-    if (charTotalCopper < totalCostInCopper) {
+    if (charTotalCopper < totalCostCopper) {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
     }
 
-    const remainingCopper = charTotalCopper - totalCostInCopper;
+    const remainingCopper = charTotalCopper - totalCostCopper;
     const change = breakdownCopper(remainingCopper);
 
-    // Update character coins
     character.coins.gold = change.gold;
     character.coins.silver = change.silver;
     character.coins.copper = change.copper;
 
-    // Add items to inventory
     for (let i = 0; i < quantity; i++) {
       character.inventory.push(item.name);
     }
