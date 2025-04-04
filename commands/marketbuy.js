@@ -13,11 +13,18 @@ function convertToCopper(value, currency) {
 }
 
 function breakdownCopper(totalCopper) {
+  if (isNaN(totalCopper) || totalCopper < 0) return { gold: 0, silver: 0, copper: 0 };
+
   const gold = Math.floor(totalCopper / rates.gold);
   const remainingAfterGold = totalCopper % rates.gold;
   const silver = Math.floor(remainingAfterGold / rates.silver);
   const copper = remainingAfterGold % rates.silver;
-  return { gold, silver, copper };
+
+  return {
+    gold: Number.isFinite(gold) ? gold : 0,
+    silver: Number.isFinite(silver) ? silver : 0,
+    copper: Number.isFinite(copper) ? copper : 0
+  };
 }
 
 module.exports = {
@@ -40,7 +47,10 @@ module.exports = {
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
 
     const totalCostCopper = convertToCopper(item.value, item.currency) * quantity;
-    const charTotalCopper = (character.coins.gold ?? 0) * rates.gold + (character.coins.silver ?? 0) * rates.silver + (character.coins.copper ?? 0);
+    const charTotalCopper =
+      (character.coins.gold ?? 0) * rates.gold +
+      (character.coins.silver ?? 0) * rates.silver +
+      (character.coins.copper ?? 0);
 
     if (charTotalCopper < totalCostCopper) {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
@@ -49,10 +59,9 @@ module.exports = {
     const remainingCopper = charTotalCopper - totalCostCopper;
     const change = breakdownCopper(remainingCopper);
 
-    // ✅ fallback to 0 if any are undefined
-    character.coins.gold = change.gold ?? 0;
-    character.coins.silver = change.silver ?? 0;
-    character.coins.copper = change.copper ?? 0;
+    character.coins.gold = change.gold;
+    character.coins.silver = change.silver;
+    character.coins.copper = change.copper;
 
     for (let i = 0; i < quantity; i++) {
       character.inventory.push(item.name);
