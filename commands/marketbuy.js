@@ -49,9 +49,10 @@ module.exports = {
     const remainingCopper = charTotalCopper - totalCostCopper;
     const change = breakdownCopper(remainingCopper);
 
-    character.coins.gold = change.gold;
-    character.coins.silver = change.silver;
-    character.coins.copper = change.copper;
+    // ✅ fallback to 0 if any are undefined
+    character.coins.gold = change.gold ?? 0;
+    character.coins.silver = change.silver ?? 0;
+    character.coins.copper = change.copper ?? 0;
 
     for (let i = 0; i < quantity; i++) {
       character.inventory.push(item.name);
