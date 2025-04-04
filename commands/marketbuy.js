@@ -60,15 +60,25 @@ module.exports = {
       character.coins.silver * rates.silver +
       character.coins.copper;
 
-    // ✅ final safeguard against buying with no money or item glitches
-    if (charTotalCopper < totalCostCopper || totalCostCopper <= 0) {
-      return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
-    }
-
     const remainingCopper = charTotalCopper - totalCostCopper;
     const change = breakdownCopper(remainingCopper);
 
-    console.log('💰 change breakdown:', change);
+    // 🔍 transaction log for debugging
+    console.log('🧾 transaction log:', {
+      item: item.name,
+      cost: item.value,
+      currency: item.currency,
+      quantity,
+      totalCostCopper,
+      charTotalCopper,
+      remainingCopper,
+      change,
+      charCoinsBefore: character.coins
+    });
+
+    if (charTotalCopper < totalCostCopper || totalCostCopper <= 0) {
+      return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
+    }
 
     if (
       typeof change.gold !== 'number' ||
