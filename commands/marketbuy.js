@@ -46,7 +46,6 @@ module.exports = {
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
 
-    // 🛡️ only patch missing coin fields — don't overwrite
     if (!character.coins) {
       character.coins = { gold: 0, silver: 0, copper: 0 };
     } else {
@@ -67,6 +66,16 @@ module.exports = {
 
     const remainingCopper = charTotalCopper - totalCostCopper;
     const change = breakdownCopper(remainingCopper);
+
+    console.log('💰 change breakdown:', change);
+
+    if (
+      typeof change.gold !== 'number' ||
+      typeof change.silver !== 'number' ||
+      typeof change.copper !== 'number'
+    ) {
+      return message.channel.send('❌ Purchase failed due to invalid coin breakdown.');
+    }
 
     character.coins.gold = change.gold;
     character.coins.silver = change.silver;
