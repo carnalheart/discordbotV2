@@ -46,11 +46,18 @@ module.exports = {
     const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
     if (!item) return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
 
+    // 🛡️ fallback for missing coins field
+    character.coins = {
+      gold: character.coins?.gold ?? 0,
+      silver: character.coins?.silver ?? 0,
+      copper: character.coins?.copper ?? 0
+    };
+
     const totalCostCopper = convertToCopper(item.value, item.currency) * quantity;
     const charTotalCopper =
-      (character.coins.gold ?? 0) * rates.gold +
-      (character.coins.silver ?? 0) * rates.silver +
-      (character.coins.copper ?? 0);
+      character.coins.gold * rates.gold +
+      character.coins.silver * rates.silver +
+      character.coins.copper;
 
     if (charTotalCopper < totalCostCopper) {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
@@ -71,7 +78,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle('― Item Purchased!')
-      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${item.value * quantity} ${item.currency}**. View it in their inventory with \`.card\`.`)
+      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${item.value * quantity} ${item.currency ?? 'copper'}**. View it in their inventory with \`.card\`.`)
       .setColor('#23272A');
 
     return message.channel.send({ embeds: [embed] });
