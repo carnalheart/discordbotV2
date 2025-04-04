@@ -1,6 +1,30 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const MarketItem = require('../models/marketitem');
 
+function formatCurrency(value, currency) {
+  const mapping = {
+    copper: {
+      singular: 'copper star',
+      plural: 'copper stars',
+      emoji: '<:C_copperstar:1346130043415298118>'
+    },
+    silver: {
+      singular: 'silver stag',
+      plural: 'silver stags',
+      emoji: '<:C_silverstag:1346130090378920066>'
+    },
+    gold: {
+      singular: 'gold dragon',
+      plural: 'gold dragons',
+      emoji: '<:C_golddragon:1346130130564808795>'
+    }
+  };
+
+  const unit = value === 1 ? mapping[currency].singular : mapping[currency].plural;
+  const emoji = mapping[currency].emoji;
+  return `${value} ${unit} ${emoji}`;
+}
+
 module.exports = {
   name: 'marketview',
   description: 'View the in-character RPG market',
@@ -16,7 +40,7 @@ module.exports = {
     const pageItems = items.slice(start, end);
 
     const itemList = pageItems.map(item => {
-      const cost = `${item.value} ${item.currency}`;
+      const cost = formatCurrency(item.value, item.currency);
       const effect = item.effect ? `— ${item.effect}` : '';
       return `➺ ${item.emoji} **${item.name}** ・ ${item.rarity} ${item.type} ・ **${cost}** ${effect}`;
     }).join('\n');
@@ -51,7 +75,7 @@ module.exports = {
       const pageItems = items.slice(start, end);
 
       const itemList = pageItems.map(item => {
-        const cost = `${item.value} ${item.currency}`;
+        const cost = formatCurrency(item.value, item.currency);
         const effect = item.effect ? `— ${item.effect}` : '';
         return `➺ ${item.emoji} **${item.name}** ・ ${item.rarity} ${item.type} ・ **${cost}** ${effect}`;
       }).join('\n');

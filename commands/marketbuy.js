@@ -12,6 +12,30 @@ function convertToCopper(value, currency) {
   return value * rates[currency];
 }
 
+function formatCurrency(value, currency) {
+  const mapping = {
+    copper: {
+      singular: 'copper star',
+      plural: 'copper stars',
+      emoji: '<:C_copperstar:1346130043415298118>'
+    },
+    silver: {
+      singular: 'silver stag',
+      plural: 'silver stags',
+      emoji: '<:C_silverstag:1346130090378920066>'
+    },
+    gold: {
+      singular: 'gold dragon',
+      plural: 'gold dragons',
+      emoji: '<:C_golddragon:1346130130564808795>'
+    }
+  };
+
+  const unit = value === 1 ? mapping[currency].singular : mapping[currency].plural;
+  const emoji = mapping[currency].emoji;
+  return `${value} ${unit} ${emoji}`;
+}
+
 module.exports = {
   name: 'marketbuy',
   description: 'Buy an item from the roleplay market',
@@ -51,41 +75,39 @@ module.exports = {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
     }
 
-    // 💰 Deduct coins top-down (gold → silver → copper)
+    // Deduct coins top-down
     let remaining = totalCostCopper;
 
-    // Deduct from gold
     const goldToUse = Math.min(character.coins.gold * rates.gold, remaining);
     const goldCoinsToRemove = Math.floor(goldToUse / rates.gold);
     character.coins.gold -= goldCoinsToRemove;
     remaining -= goldCoinsToRemove * rates.gold;
 
-    // Deduct from silver
     const silverToUse = Math.min(character.coins.silver * rates.silver, remaining);
     const silverCoinsToRemove = Math.floor(silverToUse / rates.silver);
     character.coins.silver -= silverCoinsToRemove;
     remaining -= silverCoinsToRemove * rates.silver;
 
-    // Deduct from copper
     const copperToUse = Math.min(character.coins.copper, remaining);
     character.coins.copper -= copperToUse;
     remaining -= copperToUse;
 
-    // Safety check
     if (remaining > 0) {
       return message.channel.send(`❌ Unexpected error: could not deduct enough coins.`);
     }
 
-    // Add items to inventory
+    // Add to inventory
     for (let i = 0; i < quantity; i++) {
       character.inventory.push(item.name);
     }
 
     await character.save();
 
+    const costText = formatCurrency(item.value * quantity, item.currency);
+
     const embed = new EmbedBuilder()
       .setTitle('― Item Purchased!')
-      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${item.value * quantity} ${item.currency}**. View it in their inventory with \`.card\`.`)
+      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${costText}**. View it in their inventory with \`.card\`.`)
       .setColor('#23272A');
 
     return message.channel.send({ embeds: [embed] });
