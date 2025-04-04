@@ -6,21 +6,11 @@ const items = [
   {
     name: 'Dagger',
     type: 'weapon',
-    rarity: 'rare',
-    value: 1,
-    currency: 'gold',
-    effect: '',
-    emoji: '<:D_dagger_common:1357703384412721315>',
-    description: ''
-  },
-  {
-    name: 'Medicine',
-    type: 'consumable',
-    rarity: 'rare',
-    value: 5,
+    rarity: 'common',
+    value: 2,
     currency: 'silver',
-    effect: '+5 HP',
-    emoji: '<:D_medicine_rare:1357710107554873497>',
+    effect: '-1 HP',
+    emoji: '<:D_dagger_common:1357703384412721315>',
     description: ''
   },
   {
