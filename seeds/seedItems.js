@@ -31,10 +31,10 @@ mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('🛒 Connected to MongoDB for item seeding.');
 
-    await MarketItem.deleteMany();
+    await MarketItem.deleteMany(); // optional: clears old items
     await MarketItem.insertMany(items);
 
-    console.log('✅ Market items seeded!');
+    console.log('✅ Market items seeded successfully!');
     mongoose.connection.close();
   })
   .catch((err) => {
