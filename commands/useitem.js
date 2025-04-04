@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
-const MarketItem = require('../models/MarketItem');
+const MarketItem = require('../models/marketitem');
 
 module.exports = {
   name: 'useitem',

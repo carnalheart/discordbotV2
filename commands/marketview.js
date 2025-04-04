@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const MarketItem = require('../models/MarketItem');
+const MarketItem = require('../models/marketitem');
 
 const ITEMS_PER_PAGE = 10;
 
