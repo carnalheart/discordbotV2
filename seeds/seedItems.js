@@ -1,6 +1,6 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const MarketItem = require('../models/MarketItem');
+require('dotenv').config();
 
 const items = [
   {
@@ -27,16 +27,20 @@ const items = [
   }
 ];
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log('🛒 Connected to MongoDB for item seeding.');
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ Connected to MongoDB');
 
-    await MarketItem.deleteMany(); // optional: clears old items
+    await MarketItem.deleteMany({});
+    console.log('🧼 Cleared old market items');
+
     await MarketItem.insertMany(items);
+    console.log('✅ New market items inserted');
 
-    console.log('✅ Market items seeded successfully!');
-    mongoose.connection.close();
-  })
-  .catch((err) => {
-    console.error('❌ Failed to seed items:', err);
-  });
+    process.exit();
+  } catch (err) {
+    console.error('❌ Error seeding market items:', err);
+    process.exit(1);
+  }
+})();
