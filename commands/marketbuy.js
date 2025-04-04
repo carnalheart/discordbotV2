@@ -60,7 +60,8 @@ module.exports = {
       character.coins.silver * rates.silver +
       character.coins.copper;
 
-    if (charTotalCopper < totalCostCopper) {
+    // ✅ final safeguard against buying with no money or item glitches
+    if (charTotalCopper < totalCostCopper || totalCostCopper <= 0) {
       return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
     }
 
