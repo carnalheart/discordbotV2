@@ -2,114 +2,78 @@ const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
 const MarketItem = require('../models/marketitem');
 
-const rates = {
-  gold: 14700,
-  silver: 70,
-  copper: 1
-};
-
-function convertToCopper(value, currency) {
-  return value * rates[currency];
-}
-
-function formatCurrency(value, currency) {
-  const mapping = {
-    copper: {
-      singular: 'copper star',
-      plural: 'copper stars',
-      emoji: '<:C_copperstar:1346130043415298118>'
-    },
-    silver: {
-      singular: 'silver stag',
-      plural: 'silver stags',
-      emoji: '<:C_silverstag:1346130090378920066>'
-    },
-    gold: {
-      singular: 'gold dragon',
-      plural: 'gold dragons',
-      emoji: '<:C_golddragon:1346130130564808795>'
-    }
-  };
-
-  const unit = value === 1 ? mapping[currency].singular : mapping[currency].plural;
-  const emoji = mapping[currency].emoji;
-  return `${value} ${unit} ${emoji}`;
-}
-
 module.exports = {
   name: 'marketbuy',
-  description: 'Buy an item from the roleplay market',
-
+  description: 'Buy an item from the RPG market',
   async execute(message, args) {
-    const [charName, ...rest] = args;
-    const quantity = parseInt(rest.pop());
-    const itemName = rest.join(' ');
-
+    const [charName, itemName, quantityStr] = args;
+    const quantity = parseInt(quantityStr);
     if (!charName || !itemName || isNaN(quantity) || quantity < 1) {
-      return message.channel.send('❌ Usage: `.marketbuy <character> <item> <quantity>`');
+      return message.channel.send('⚠️ Usage: `.marketbuy <character> <item> <quantity>`');
     }
 
-    const character = await Character.findOne({ name: new RegExp(`^${charName}$`, 'i') });
-    if (!character) return message.channel.send(`⚠️ Character **${charName}** not found.`);
-
-    const item = await MarketItem.findOne({ name: new RegExp(`^${itemName}$`, 'i') });
-    if (!item || !item.currency || !rates[item.currency]) {
-      return message.channel.send(`⚠️ Item **${itemName}** not found or has an invalid currency.`);
+    const character = await Character.findOne({ name: { $regex: new RegExp(`^${charName}$`, 'i') } });
+    if (!character) {
+      return message.channel.send(`⚠️ Character **${charName}** not found.`);
     }
 
-    if (!character.coins) {
-      character.coins = { gold: 0, silver: 0, copper: 0 };
-    } else {
-      character.coins.gold = character.coins.gold ?? 0;
-      character.coins.silver = character.coins.silver ?? 0;
-      character.coins.copper = character.coins.copper ?? 0;
+    const item = await MarketItem.findOne({ name: { $regex: new RegExp(`^${itemName}$`, 'i') } });
+    if (!item) {
+      return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
     }
 
-    const totalCostCopper = convertToCopper(item.value, item.currency) * quantity;
-    const charTotalCopper =
-      character.coins.gold * rates.gold +
-      character.coins.silver * rates.silver +
-      character.coins.copper;
+    const pricePerUnit = item.value;
+    const currencyType = item.currency?.toLowerCase();
 
-    if (charTotalCopper < totalCostCopper) {
-      return message.channel.send(`⚠️ ${character.name} doesn't have enough money to buy that.`);
+    if (!['copper', 'silver', 'gold'].includes(currencyType)) {
+      return message.channel.send('⚠️ Item currency type is invalid.');
     }
 
-    // Deduct coins top-down
-    let remaining = totalCostCopper;
+    const priceInCopper =
+      currencyType === 'gold' ? pricePerUnit * 10000 :
+      currencyType === 'silver' ? pricePerUnit * 100 :
+      pricePerUnit;
 
-    const goldToUse = Math.min(character.coins.gold * rates.gold, remaining);
-    const goldCoinsToRemove = Math.floor(goldToUse / rates.gold);
-    character.coins.gold -= goldCoinsToRemove;
-    remaining -= goldCoinsToRemove * rates.gold;
+    const totalCostCopper = priceInCopper * quantity;
+    const charCopper = (character.coins.gold || 0) * 10000 +
+                       (character.coins.silver || 0) * 100 +
+                       (character.coins.copper || 0);
 
-    const silverToUse = Math.min(character.coins.silver * rates.silver, remaining);
-    const silverCoinsToRemove = Math.floor(silverToUse / rates.silver);
-    character.coins.silver -= silverCoinsToRemove;
-    remaining -= silverCoinsToRemove * rates.silver;
-
-    const copperToUse = Math.min(character.coins.copper, remaining);
-    character.coins.copper -= copperToUse;
-    remaining -= copperToUse;
-
-    if (remaining > 0) {
-      return message.channel.send(`❌ Unexpected error: could not deduct enough coins.`);
+    if (charCopper < totalCostCopper) {
+      return message.channel.send(`⚠️ ${character.name} can't afford that purchase.`);
     }
 
-    // Add to inventory
-    for (let i = 0; i < quantity; i++) {
-      character.inventory.push(item.name);
+    const remainingCopper = charCopper - totalCostCopper;
+
+    const newGold = Math.floor(remainingCopper / 10000);
+    const newSilver = Math.floor((remainingCopper % 10000) / 100);
+    const newCopper = remainingCopper % 100;
+
+    character.coins.gold = newGold;
+    character.coins.silver = newSilver;
+    character.coins.copper = newCopper;
+
+    // ✅ Fix: Add items as an object with quantity, not an array
+    if (!character.inventory || typeof character.inventory !== 'object' || Array.isArray(character.inventory)) {
+      character.inventory = {}; // Reset malformed inventories
     }
+
+    const itemKey = item.name;
+    character.inventory[itemKey] = (character.inventory[itemKey] || 0) + quantity;
 
     await character.save();
 
-    const costText = formatCurrency(item.value * quantity, item.currency);
+    const currencyDisplay = {
+      copper: `copper star${pricePerUnit === 1 ? '' : 's'} <:C_copperstar:1346130043415298118>`,
+      silver: `silver stag${pricePerUnit === 1 ? '' : 's'} <:C_silverstag:1346130090378920066>`,
+      gold: `gold dragon${pricePerUnit === 1 ? '' : 's'} <:C_golddragon:1346130130564808795>`
+    }[currencyType];
 
     const embed = new EmbedBuilder()
       .setTitle('― Item Purchased!')
-      .setDescription(`${character.name} purchased **${quantity} ${item.name}** for **${costText}**. View it in their inventory with \`.card\`.`)
+      .setDescription(`${character.name} purchased ${quantity} ${item.name} for ${pricePerUnit} ${currencyDisplay}. View it in their inventory with \`.card\`.`)
       .setColor('#23272A');
 
-    return message.channel.send({ embeds: [embed] });
+    message.channel.send({ embeds: [embed] });
   }
 };

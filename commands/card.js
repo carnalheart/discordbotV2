@@ -11,17 +11,19 @@ module.exports = {
       return message.channel.send('⚠️ You must provide a character name.');
     }
 
-    const character = await Character.findOne({ name: { $regex: new RegExp(`^${charName}$`, 'i') } });
+    const character = await Character.findOne({
+      name: { $regex: new RegExp(`^${charName}$`, 'i') }
+    });
     if (!character) {
       return message.channel.send(`⚠️ Character **${charName}** not found.`);
     }
 
-    // 🧾 DEBUG: Log the character's inventory
-    console.log('🧾 Inventory contents:', character.inventory);
-
     const hp = character.hp?.max ? `${character.hp.current}/${character.hp.max}` : '0';
 
-    // Fetch all market items and build an emoji map
+    // 🧾 DEBUG: Log inventory contents
+    console.log('🧾 Inventory contents:', character.inventory);
+
+    // Build emoji map from MarketItem
     const marketItems = await MarketItem.find();
     const emojiMap = {};
     marketItems.forEach(item => {
@@ -30,7 +32,7 @@ module.exports = {
       }
     });
 
-    // Build the inventory display
+    // Build inventory display
     const inventory = character.inventory || {};
     const inventoryLines = Object.entries(inventory)
       .filter(([_, qty]) => qty > 0)
@@ -69,7 +71,9 @@ module.exports = {
         }
       )
       .setImage(character.image || 'https://i.imgur.com/5c3aNMa.png?quality=lossless')
-      .setFooter({ text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.' })
+      .setFooter({
+        text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.'
+      })
       .setColor('#23272A');
 
     message.channel.send({ embeds: [embed] });
