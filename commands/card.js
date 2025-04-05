@@ -44,7 +44,7 @@ module.exports = {
       .setDescription(`[Character biography.](${bio})`)
       .addFields(
         {
-          name: 'Statistics',
+          name: '__Statistics__',
           value:
             `➺ **Strength** ・ ${strength}\n` +
             `➺ **Dexterity** ・ ${dexterity}\n` +
@@ -55,14 +55,14 @@ module.exports = {
             `➺ **Health Points** ・ ${hpCurrent}/${hpMax}`
         },
         {
-          name: 'Coin Pouch',
+          name: '__Coin Pouch__',
           value:
             `➺ **Copper Stars** ・ ${copper} <:C_copperstar:1346130043415298118>\n` +
             `➺ **Silver Stags** ・ ${silver} <:C_silverstag:1346130090378920066>\n` +
             `➺ **Gold Dragons** ・ ${gold} <:C_golddragon:1346130130564808795>`
         },
         {
-          name: 'Inventory',
+          name: '__Inventory__',
           value: inventoryList
         }
       )
