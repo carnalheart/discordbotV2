@@ -7,14 +7,14 @@ module.exports = {
     const diceMatch = input.match(/^(\d*)d(\d+)$/i);
 
     if (!diceMatch) {
-      return message.reply("Invalid format! Use `.roll d20` or `.roll 6d20`.");
+      return message.channel.send("Invalid format! Use `.roll d20` or `.roll 6d20`.");
     }
 
     const count = parseInt(diceMatch[1] || '1', 10);
     const sides = parseInt(diceMatch[2], 10);
 
     if (count > 100 || sides > 1000) {
-      return message.reply("That’s a bit much. Try fewer dice or sides.");
+      return message.channel.send("That’s a bit much. Try fewer dice or sides.");
     }
 
     const rolls = [];
@@ -34,7 +34,6 @@ module.exports = {
           : `**${rollsStr}**`
       );
 
-    message.reply({ embeds: [embed] });
+    message.channel.send({ embeds: [embed] });
   }
 };
-// Updated embed output format

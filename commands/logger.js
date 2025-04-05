@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = (client) => {
-  const LOG_CHANNEL_ID = 'YOUR_LOG_CHANNEL_ID_HERE';
+  const LOG_CHANNEL_ID = '1356705653107851364';
 
   const log = async (embed) => {
     const logChannel = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
