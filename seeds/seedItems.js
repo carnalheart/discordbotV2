@@ -54,7 +54,7 @@ const items = [
     description: ''
   },
   {
-    name: 'longsword',
+    name: 'Longsword',
     type: 'weapon',
     rarity: 'uncommon',
     value: 4,
@@ -64,7 +64,7 @@ const items = [
     description: ''
   },
   {
-    name: 'broadsword',
+    name: 'Broadsword',
     type: 'weapon',
     rarity: 'rare',
     value: 6,
@@ -74,7 +74,7 @@ const items = [
     description: ''
   },
   {
-    name: 'arakh',
+    name: 'Arakh',
     type: 'weapon',
     rarity: 'rare',
     value: 5,
@@ -84,7 +84,7 @@ const items = [
     description: ''
   },
   {
-    name: 'axe',
+    name: 'Axe',
     type: 'utility',
     rarity: 'common',
     value: 3,
@@ -94,7 +94,7 @@ const items = [
     description: ''
   },
   {
-    name: 'dragonglass sword',
+    name: 'Dragonglass Sword',
     type: 'weapon',
     rarity: 'legendary',
     value: 2,
@@ -104,7 +104,7 @@ const items = [
     description: ''
   },
   {
-    name: 'fishing rod',
+    name: 'Fishing Rod',
     type: 'utility',
     rarity: 'common',
     value: 60,
@@ -114,7 +114,7 @@ const items = [
     description: ''
   },
   {
-    name: 'anchovy',
+    name: 'Anchovy',
     type: 'consumable',
     rarity: 'common',
     value: 8,
@@ -124,7 +124,7 @@ const items = [
     description: ''
   },
   {
-    name: 'salmon',
+    name: 'Salmon',
     type: 'consumable',
     rarity: 'uncommon',
     value: 30,
@@ -134,7 +134,7 @@ const items = [
     description: ''
   },
   {
-    name: 'trout',
+    name: 'Trout',
     type: 'consumable',
     rarity: 'rare',
     value: 1,
@@ -144,7 +144,7 @@ const items = [
     description: ''
   },
   {
-    name: 'red mullet',
+    name: 'Red Mullet',
     type: 'consumable',
     rarity: 'epic',
     value: 3,
@@ -154,7 +154,7 @@ const items = [
     description: ''
   },
   {
-    name: 'lionfish',
+    name: 'Lionfish',
     type: 'consumable',
     rarity: 'legendary',
     value: 6,
@@ -164,7 +164,7 @@ const items = [
     description: ''
   },
   {
-    name: 'rodent meat',
+    name: 'Rodent Meat',
     type: 'consumable',
     rarity: 'common',
     value: 4,
@@ -174,7 +174,7 @@ const items = [
     description: ''
   },
   {
-    name: 'rabbit meat',
+    name: 'Rabbit Meat',
     type: 'consumable',
     rarity: 'uncommon',
     value: 16,
@@ -184,7 +184,7 @@ const items = [
     description: ''
   },
   {
-    name: 'bird meat',
+    name: 'Bird Meat',
     type: 'consumable',
     rarity: 'rare',
     value: 32,
@@ -194,7 +194,7 @@ const items = [
     description: ''
   },
   {
-    name: 'pork meat',
+    name: 'Pork Meat',
     type: 'consumable',
     rarity: 'epic',
     value: 1,
@@ -204,7 +204,7 @@ const items = [
     description: ''
   },
   {
-    name: 'venison meat',
+    name: 'Venison Meat',
     type: 'consumable',
     rarity: 'legendary',
     value: 3,
