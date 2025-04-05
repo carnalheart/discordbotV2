@@ -1,65 +1,47 @@
-const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
 const MarketItem = require('../models/marketitem');
 
+function toTitleCase(str) {
+  return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
 module.exports = {
   name: 'useitem',
-  description: 'Use an item from your character\'s inventory',
+  description: 'Use a consumable item.',
   async execute(message, args) {
-    const [charName, itemName, quantityStr] = args;
-    const quantity = parseInt(quantityStr);
-    if (!charName || !itemName || isNaN(quantity) || quantity < 1) {
-      return message.channel.send('⚠️ Usage: `.useitem <character> <item> <quantity>`');
+    const [charName, itemName, qtyStr] = args;
+    const quantity = parseInt(qtyStr);
+    if (!charName || !itemName || isNaN(quantity)) {
+      return message.reply('Usage: `.useitem <character> <item> <quantity>`');
     }
 
-    const character = await Character.findOne({ name: { $regex: new RegExp(`^${charName}$`, 'i') } });
-    if (!character) {
-      return message.channel.send(`⚠️ Character **${charName}** not found.`);
+    const character = await Character.findOne({ name: { $regex: `^${charName}$`, $options: 'i' } });
+    const item = await MarketItem.findOne({ name: { $regex: `^${itemName}$`, $options: 'i' } });
+
+    if (!character || !item) return message.reply('⚠️ Character or item not found.');
+
+    const invEntry = character.inventory.find(i => Object.keys(i)[0].toLowerCase() === item.name.toLowerCase());
+    if (!invEntry || invEntry[item.name] < quantity) {
+      return message.reply(`⚠️ ${character.name} does not have enough of that item.`);
     }
 
-    const item = await MarketItem.findOne({ name: { $regex: new RegExp(`^${itemName}$`, 'i') } });
-    if (!item) {
-      return message.channel.send(`⚠️ Item **${itemName}** not found in the market.`);
+    if (item.effect?.includes('HP')) {
+      const heal = parseInt(item.effect.match(/\+(\d+)/)?.[1]);
+      character.hpCurrent = Math.min(character.hpMax, character.hpCurrent + heal * quantity);
     }
 
-    // Make sure the inventory is valid and contains this item
-    const inventory = character.inventory || {};
-    const ownedQty = inventory[item.name] || 0;
-
-    if (ownedQty < quantity) {
-      return message.channel.send(`⚠️ ${character.name} doesn't have that many **${item.name}**.`);
+    invEntry[item.name] -= quantity;
+    if (invEntry[item.name] <= 0) {
+      character.inventory = character.inventory.filter(i => Object.keys(i)[0] !== item.name);
     }
 
-    // Process healing if effect includes "+<HP>"
-    let healing = 0;
-    if (typeof item.effect === 'string' && item.effect.includes('+')) {
-      const match = item.effect.match(/\+(\d+)\s*HP/i);
-      if (match) {
-        healing = parseInt(match[1]) * quantity;
-      }
-    }
-
-    if (healing > 0) {
-      if (!character.hp || typeof character.hp.current !== 'number' || typeof character.hp.max !== 'number') {
-        return message.channel.send(`⚠️ ${character.name} doesn't have HP set. Use \`.sethp\` first.`);
-      }
-
-      character.hp.current = Math.min(character.hp.max, character.hp.current + healing);
-    }
-
-    // Subtract used quantity
-    inventory[item.name] -= quantity;
-    if (inventory[item.name] <= 0) {
-      delete inventory[item.name];
-    }
-
-    character.inventory = inventory;
     await character.save();
 
-    const embed = new EmbedBuilder()
-      .setTitle('― Item Used!')
-      .setDescription(`${character.name} used ${quantity} ${item.name}${healing > 0 ? ` and restored **${healing}** HP!` : ' successfully.'}`)
-      .setColor('#23272A');
+    const embed = {
+      title: '― Item Used!',
+      description: `${character.name} used **${quantity} ${toTitleCase(item.name)}${quantity > 1 ? 's' : ''}**.`,
+      color: 0x23272A,
+    };
 
     message.channel.send({ embeds: [embed] });
   }

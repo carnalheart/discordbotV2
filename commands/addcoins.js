@@ -13,6 +13,12 @@ module.exports = {
     const amount = parseInt(rawAmount);
     const type = typeRaw?.toLowerCase().replace(/s$/, '');
 
+    const emojiMap = {
+      copper: '<:C_copperstar:1346130043415298118>',
+      silver: '<:C_silverstag:1346130090378920066>',
+      gold: '<:C_golddragon:1346130130564808795>'
+    };
+
     if (!name || !amount || !['gold', 'silver', 'copper'].includes(type)) {
       return message.channel.send('Usage: `.addcoins <character> <amount> <type>`');
     }
@@ -23,9 +29,11 @@ module.exports = {
     character.coins[type] = (character.coins[type] ?? 0) + amount;
     await character.save();
 
+    const coinText = `${type} ${emojiMap[type]}`;
+
     const embed = new EmbedBuilder()
       .setTitle('― Coins Added')
-      .setDescription(`Gave **${amount} ${type}** to ${character.name}.`)
+      .setDescription(`Gave **${amount} ${coinText}** to ${character.name}.`)
       .setColor('#23272A');
 
     return message.channel.send({ embeds: [embed] });
