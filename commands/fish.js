@@ -1,11 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
-const items = require('../data/itemEffects'); // Optional: centralize fish data here
+const MarketItem = require('../models/marketitem');
 
 module.exports = {
   name: 'fish',
   description: 'Go fishing using your character\'s wisdom and dexterity!',
-  
+
   async execute(message, args) {
     const [charName] = args;
     if (!charName) return message.channel.send('Usage: `.fish <character>`');
@@ -19,7 +19,6 @@ module.exports = {
     const total = roll + wisdom + dexterity;
 
     let reward = null;
-
     if (total >= 22) reward = 'Lionfish';
     else if (total >= 18) reward = 'Red Mullet';
     else if (total >= 15) reward = 'Trout';
@@ -27,11 +26,15 @@ module.exports = {
     else if (total >= 4) reward = 'Anchovy';
 
     if (reward) {
-      character.inventory.push(reward);
+      const existing = character.inventory.find(i => i[reward]);
+      if (existing) {
+        existing[reward] += 1;
+      } else {
+        character.inventory.push({ [reward]: 1 });
+      }
       await character.save();
 
-      const itemData = require('../models/marketitem'); // use MarketItem DB for emoji & rarity
-      const item = await itemData.findOne({ name: new RegExp(`^${reward}$`, 'i') });
+      const item = await MarketItem.findOne({ name: new RegExp(`^${reward}$`, 'i') });
 
       const embed = new EmbedBuilder()
         .setTitle('― Fishing Game')
