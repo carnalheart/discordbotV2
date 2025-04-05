@@ -15,9 +15,11 @@ module.exports = {
     const stats = character.stats || {};
     const coins = character.coins || {};
     const inventory = character.inventory || [];
-
-    // Format stats
     const hp = character.hpMax ?? 0;
+
+    console.log('🧾 Inventory contents:', inventory); // 🛠️ DEBUG LOG
+
+    // ─── Stats ───
     const statsField = `➺ **Strength** ・ ${stats.strength || 0}
 ➺ **Dexterity** ・ ${stats.dexterity || 0}
 ➺ **Constitution** ・ ${stats.constitution || 0}
@@ -26,26 +28,33 @@ module.exports = {
 ➺ **Charisma** ・ ${stats.charisma || 0}
 ➺ **Health Points** ・ ${hp}`;
 
-    // Format coins
+    // ─── Coins ───
     const coinField = `➺ **Copper Stars** ・ ${coins.copper || 0} <:C_copperstar:1346130043415298118>
 ➺ **Silver Stags** ・ ${coins.silver || 0} <:C_silverstag:1346130090378920066>
 ➺ **Gold Dragons** ・ ${coins.gold || 0} <:C_golddragon:1346130130564808795>`;
 
-    // Format inventory
+    // ─── Inventory ───
     let inventoryField = '*No items yet.*';
-    if (inventory.length > 0) {
-      const lines = [];
-      for (const itemObj of inventory) {
-        const [itemName, quantity] = Object.entries(itemObj)[0];
 
-        const marketItem = await MarketItem.findOne({ name: { $regex: new RegExp(`^${itemName}$`, 'i') } });
-        const emoji = marketItem?.emoji || '➺';
-        lines.push(`${emoji} **${itemName}** ・x${quantity}`);
+    if (Array.isArray(inventory) && inventory.length > 0) {
+      const lines = [];
+
+      for (const entry of inventory) {
+        if (typeof entry === 'object' && entry !== null) {
+          const [itemName, quantity] = Object.entries(entry)[0];
+
+          const marketItem = await MarketItem.findOne({ name: { $regex: new RegExp(`^${itemName}$`, 'i') } });
+          const emoji = marketItem?.emoji || '➺';
+          lines.push(`${emoji} **${itemName}** ・x${quantity}`);
+        }
       }
-      inventoryField = lines.join('\n');
+
+      if (lines.length > 0) {
+        inventoryField = lines.join('\n');
+      }
     }
 
-    // Embed
+    // ─── Final Embed ───
     const embed = new EmbedBuilder()
       .setTitle(`<:servericon:1343229799228899419> ― ${character.name}`)
       .setDescription(`[Character biography.](${character.bio || 'https://discord.com'})`)
@@ -58,6 +67,6 @@ module.exports = {
       .setFooter({ text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.' })
       .setColor('#23272A');
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   }
 };
