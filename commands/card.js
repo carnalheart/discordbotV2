@@ -18,7 +18,7 @@ module.exports = {
 
     const hp = character.hp?.max ? `${character.hp.current}/${character.hp.max}` : '0';
 
-    // Get market items and build emoji map
+    // Fetch all market items and map them by lowercase name
     const marketItems = await MarketItem.find();
     const emojiMap = {};
     marketItems.forEach(item => {
@@ -27,13 +27,13 @@ module.exports = {
       }
     });
 
-    // Build inventory display
+    // Build inventory field
     const inventory = character.inventory || {};
     const inventoryLines = Object.entries(inventory)
       .filter(([_, qty]) => qty > 0)
-      .map(([name, qty]) => {
-        const emoji = emojiMap[name.toLowerCase()] || '';
-        return `➺ ${emoji} **${name}** ・x${qty}`;
+      .map(([itemName, qty]) => {
+        const emoji = emojiMap[itemName.toLowerCase()] || '➺';
+        return `${emoji} **${itemName}** ・x${qty}`;
       });
 
     const inventoryDisplay = inventoryLines.length > 0 ? inventoryLines.join('\n') : '*No items yet.*';
