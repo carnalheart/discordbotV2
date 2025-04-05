@@ -5,7 +5,7 @@ const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js'
 const mongoose = require('mongoose');
 
 const handleReaction = require('./commands/reactionRoles');
-const initLogger = require('./commands/logger');
+const initLogger = require('./logger'); // ✅ updated path
 const initWelcomer = require('./welcomer');
 const initStickyMessage = require('./stickyMessage');
 
@@ -33,13 +33,7 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
-
-  // Slash commands
-  if (command.data && command.data.name) {
-    client.commands.set(command.data.name, command);
-  }
-  // Prefix-only commands
-  else if (command.name) {
+  if (command.name) {
     client.commands.set(command.name, command);
   }
 }
@@ -69,9 +63,13 @@ client.once('ready', () => {
     ]
   });
 
-  initLogger(client);
-  initWelcomer(client);
-  initStickyMessage(client);
+  try {
+    initLogger(client);
+    initWelcomer(client);
+    initStickyMessage(client);
+  } catch (err) {
+    console.error('❌ Error initializing startup modules:', err);
+  }
 });
 
 const prefix = '.';
