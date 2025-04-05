@@ -48,7 +48,7 @@ module.exports = {
         embed.addFields({
           name: `➺ ${emoji} **${item.name}**`,
           value: `・ *class* — ${rarity} ${category}\n・ *price* — ${price}\n・ *effect* — ${effect}`,
-          inline: true
+          inline: false
         });
       }
 
