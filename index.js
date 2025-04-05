@@ -5,7 +5,7 @@ const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js'
 const mongoose = require('mongoose');
 
 const handleReaction = require('./commands/reactionRoles');
-const initLogger = require('./logger'); // ✅ updated path
+const initLogger = require('./logger');
 const initWelcomer = require('./welcomer');
 const initStickyMessage = require('./stickyMessage');
 
@@ -77,7 +77,6 @@ const prefix = '.';
 client.on('messageCreate', message => {
   if (message.author.bot) return;
 
-  // Prefix commands
   if (message.content.startsWith(prefix)) {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
