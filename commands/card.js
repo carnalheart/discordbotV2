@@ -16,9 +16,12 @@ module.exports = {
       return message.channel.send(`⚠️ Character **${charName}** not found.`);
     }
 
+    // 🧾 DEBUG: Log the character's inventory
+    console.log('🧾 Inventory contents:', character.inventory);
+
     const hp = character.hp?.max ? `${character.hp.current}/${character.hp.max}` : '0';
 
-    // Fetch all market items and map them by lowercase name
+    // Fetch all market items and build an emoji map
     const marketItems = await MarketItem.find();
     const emojiMap = {};
     marketItems.forEach(item => {
@@ -27,7 +30,7 @@ module.exports = {
       }
     });
 
-    // Build inventory field
+    // Build the inventory display
     const inventory = character.inventory || {};
     const inventoryLines = Object.entries(inventory)
       .filter(([_, qty]) => qty > 0)
