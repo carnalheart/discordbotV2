@@ -15,7 +15,36 @@ module.exports = (client) => {
       .replace(/<#(\d+)>/g, (_, id) => `#Channel(${id})`)
       .replace(/`/g, "'");
 
-  // Message Deleted
+  // ────────────── MODERATION COMMAND LOGS ──────────────
+  client.on('modAction', ({ type, target, author, reason }) => {
+    const titleMap = {
+      ban: 'User Banned',
+      unban: 'User Unbanned',
+      kick: 'User Kicked',
+      purge: 'Messages Purged',
+    };
+
+    const embed = new EmbedBuilder().setColor('#23272A').setTimestamp();
+
+    switch (type) {
+      case 'ban':
+      case 'unban':
+      case 'kick':
+        embed.setTitle(titleMap[type]);
+        embed.setDescription(
+          `**${target.tag || target.username} (${target.id})** was ${type}ed by ${author.tag} (${author.id}). Reason: **${reason}**`
+        );
+        break;
+      case 'purge':
+        embed.setTitle(titleMap[type]);
+        embed.setDescription(`**${author.tag} (${author.id})** purged **${reason}** messages.`);
+        break;
+    }
+
+    log(embed);
+  });
+
+  // ────────────── MESSAGE DELETE ──────────────
   client.on('messageDelete', async (message) => {
     if (message.partial) {
       try {
@@ -38,7 +67,7 @@ module.exports = (client) => {
     log(embed);
   });
 
-  // Message Edited
+  // ────────────── MESSAGE EDIT ──────────────
   client.on('messageUpdate', async (oldMsg, newMsg) => {
     if (oldMsg.partial || newMsg.partial) return;
     if (oldMsg.author?.bot || !oldMsg.guild || oldMsg.content === newMsg.content) return;
@@ -56,7 +85,7 @@ module.exports = (client) => {
     log(embed);
   });
 
-  // Member Join/Leave
+  // ────────────── MEMBER JOIN / LEAVE ──────────────
   client.on('guildMemberAdd', (member) => {
     const embed = new EmbedBuilder()
       .setTitle('Member Joined')
@@ -75,7 +104,7 @@ module.exports = (client) => {
     log(embed);
   });
 
-  // Bans
+  // ────────────── BAN / UNBAN ──────────────
   client.on('guildBanAdd', (ban) => {
     const embed = new EmbedBuilder()
       .setTitle('Member Banned')
@@ -94,7 +123,7 @@ module.exports = (client) => {
     log(embed);
   });
 
-  // Nickname Change
+  // ────────────── NICKNAME CHANGES ──────────────
   client.on('guildMemberUpdate', (oldMember, newMember) => {
     if (oldMember.nickname !== newMember.nickname) {
       const embed = new EmbedBuilder()
@@ -110,7 +139,7 @@ module.exports = (client) => {
     }
   });
 
-  // Channel Create/Delete/Update
+  // ────────────── CHANNEL CHANGES ──────────────
   client.on('channelCreate', (channel) => {
     const embed = new EmbedBuilder()
       .setTitle('Channel Created')
@@ -144,7 +173,7 @@ module.exports = (client) => {
     }
   });
 
-  // Role Create/Delete/Update
+  // ────────────── ROLE CHANGES ──────────────
   client.on('roleCreate', (role) => {
     const embed = new EmbedBuilder()
       .setTitle('Role Created')
@@ -177,7 +206,7 @@ module.exports = (client) => {
     }
   });
 
-  // Guild/Server Updates
+  // ────────────── GUILD (SERVER) CHANGES ──────────────
   client.on('guildUpdate', (oldGuild, newGuild) => {
     const embed = new EmbedBuilder()
       .setTitle('Server Updated')
@@ -196,7 +225,7 @@ module.exports = (client) => {
     log(embed);
   });
 
-  // Emoji Events
+  // ────────────── EMOJI EVENTS ──────────────
   client.on('emojiCreate', (emoji) => {
     const embed = new EmbedBuilder()
       .setTitle('Emoji Created')
