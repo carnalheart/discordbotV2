@@ -1,21 +1,38 @@
 const mongoose = require('mongoose');
 
 const characterSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  ownerId: { type: String, required: true },
-  bio: { type: String, default: '' },
-  image: { type: String, default: '' },
-  stats: {
-    strength: Number,
-    dexterity: Number,
-    constitution: Number,
-    intelligence: Number,
-    wisdom: Number,
-    charisma: Number,
+  name: {
+    type: String,
+    required: true,
+    unique: true
   },
-  hp: {
-    current: { type: Number, default: 0 },
-    max: { type: Number, default: 0 }
+  ownerId: {
+    type: String,
+    required: true
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  stats: {
+    strength: { type: Number, default: 0 },
+    dexterity: { type: Number, default: 0 },
+    constitution: { type: Number, default: 0 },
+    intelligence: { type: Number, default: 0 },
+    wisdom: { type: Number, default: 0 },
+    charisma: { type: Number, default: 0 }
+  },
+  hpMax: {
+    type: Number,
+    default: 0
+  },
+  hpCurrent: {
+    type: Number,
+    default: 0
   },
   coins: {
     copper: { type: Number, default: 0 },
@@ -23,9 +40,8 @@ const characterSchema = new mongoose.Schema({
     gold: { type: Number, default: 0 }
   },
   inventory: {
-    type: Map,
-    of: Number,
-    default: {}
+    type: [Object],
+    default: []
   }
 });
 
