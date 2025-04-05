@@ -1,65 +1,66 @@
-const Character = require('../models/character');
-const { EmbedBuilder } = require('discord.js');
+const Character = require("../models/character");
 
 module.exports = {
-  name: 'giveitem',
-  description: 'Transfers an item between characters.',
-
+  name: "giveitem",
+  description: "Give items from one character to another",
   async execute(message, args) {
-    if (args.length < 5 || args[3].toLowerCase() !== 'to') {
-      return message.channel.send('Usage: `.giveitem <item> <quantity> <giving character> to <receiving character>`');
+    const [itemNameRaw, quantityRaw, giverNameRaw, , receiverNameRaw] = args;
+    const itemName = itemNameRaw?.toLowerCase();
+    const quantity = parseInt(quantityRaw);
+    const giverName = giverNameRaw?.toLowerCase();
+    const receiverName = receiverNameRaw?.toLowerCase();
+
+    if (!itemName || !quantity || !giverName || !receiverName || args[3]?.toLowerCase() !== "to") {
+      return message.reply("Invalid syntax. Use `.giveitem <item> <quantity> <giver> to <receiver>`.");
     }
 
-    const itemName = args[0].toLowerCase();
-    const quantity = parseInt(args[1]);
-    const giverName = args[2];
-    const receiverName = args[4];
+    const giver = await Character.findOne({ name: { $regex: new RegExp("^" + giverName + "$", "i") } });
+    const receiver = await Character.findOne({ name: { $regex: new RegExp("^" + receiverName + "$", "i") } });
 
-    if (isNaN(quantity) || quantity <= 0) {
-      return message.channel.send('Quantity must be a positive number.');
+    if (!giver || !receiver) {
+      return message.reply("One or both characters could not be found.");
     }
 
-    const giver = await Character.findOne({ name: { $regex: new RegExp(`^${giverName}$`, 'i') } });
-    const receiver = await Character.findOne({ name: { $regex: new RegExp(`^${receiverName}$`, 'i') } });
-
-    if (!giver) return message.channel.send(`Character **${giverName}** not found.`);
-    if (!receiver) return message.channel.send(`Character **${receiverName}** not found.`);
-
-    // Find the item in giver's inventory
-    const giverInventory = giver.inventory || [];
-    const itemIndex = giverInventory.findIndex(entry => entry[itemName]);
-
-    if (itemIndex === -1 || giverInventory[itemIndex][itemName] < quantity) {
-      return message.channel.send(`${giver.name} does not have enough of that item.`);
+    // Flatten and count giver's inventory
+    const inventoryCount = {};
+    for (const entry of giver.inventory) {
+      for (const [name, qty] of Object.entries(entry)) {
+        const lowerName = name.toLowerCase();
+        inventoryCount[lowerName] = (inventoryCount[lowerName] || 0) + qty;
+      }
     }
 
-    // Remove item from giver
-    giverInventory[itemIndex][itemName] -= quantity;
-    if (giverInventory[itemIndex][itemName] <= 0) {
-      giverInventory.splice(itemIndex, 1);
+    if (!inventoryCount[itemName] || inventoryCount[itemName] < quantity) {
+      return message.reply(`${giver.name} does not have enough of that item.`);
     }
 
-    // Add item to receiver
-    const receiverInventory = receiver.inventory || [];
-    const receiverItemIndex = receiverInventory.findIndex(entry => entry[itemName]);
+    // Remove from giver's inventory
+    let remainingToRemove = quantity;
+    giver.inventory = giver.inventory.reduce((newInventory, entry) => {
+      const [entryName, entryQty] = Object.entries(entry)[0];
+      if (entryName.toLowerCase() !== itemName) {
+        newInventory.push(entry);
+      } else if (entryQty > remainingToRemove) {
+        newInventory.push({ [entryName]: entryQty - remainingToRemove });
+        remainingToRemove = 0;
+      } else {
+        remainingToRemove -= entryQty;
+      }
+      return newInventory;
+    }, []);
 
-    if (receiverItemIndex === -1) {
-      receiverInventory.push({ [itemName]: quantity });
-    } else {
-      receiverInventory[receiverItemIndex][itemName] += quantity;
-    }
+    // Add to receiver's inventory
+    receiver.inventory.push({ [itemNameRaw]: quantity });
 
-    // Save both
-    giver.inventory = giverInventory;
-    receiver.inventory = receiverInventory;
     await giver.save();
     await receiver.save();
 
-    const embed = new EmbedBuilder()
-      .setTitle('― Item Transferred!')
-      .setDescription(`**${giver.name}** gave **${quantity} ${itemName}** to **${receiver.name}**.`)
-      .setColor('#23272A');
-
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({
+      embeds: [{
+        title: "― Item Transferred!",
+        description: `**${giver.name}** gave **${quantity} ${itemNameRaw}(s)** to **${receiver.name}**.`,
+        color: 0x23272A
+      }]
+    });
   }
 };
