@@ -36,7 +36,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle('<:servericon:1343229799228899419> ― RPG Market')
         .setColor('#23272A')
-        .setFooter({ text: `Page ${page + 1}/${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` });
+        .setFooter({ text: `Page ${page + 1}/${totalPages} | .marketbuy <character> <item> <quantity>` });
 
       for (const item of pageItems) {
         const emoji = item.emoji ?? '';
