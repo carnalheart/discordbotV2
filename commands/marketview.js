@@ -1,104 +1,90 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const MarketItem = require('../models/marketitem');
 
-const ITEMS_PER_PAGE = 10;
-
-function formatPrice(value, currency) {
-  const emojiMap = {
-    copper: '<:C_copperstar:1346130043415298118>',
-    silver: '<:C_silverstag:1346130090378920066>',
-    gold: '<:C_golddragon:1346130130564808795>',
-  };
-
-  if (!value || !currency || !emojiMap[currency]) return '*undefined*';
-
-  const plural = value === 1 ? '' : 's';
-  const nameMap = {
-    copper: `copper star${plural}`,
-    silver: `silver stag${plural}`,
-    gold: `gold dragon${plural}`,
-  };
-
-  return `**${value} ${nameMap[currency]}** ${emojiMap[currency]}`;
-}
-
 module.exports = {
   name: 'marketview',
-  description: 'Displays the RPG market',
+  description: 'View the RPG item market',
 
   async execute(message) {
-    const items = await MarketItem.find().sort({ name: 1 });
-
-    if (!items.length) {
-      return message.channel.send('No market items found.');
-    }
-
+    const itemsPerPage = 10;
+    const allItems = await MarketItem.find().sort({ name: 1 });
+    const totalPages = Math.ceil(allItems.length / itemsPerPage);
     let currentPage = 0;
 
-    const getPageEmbed = (page) => {
+    const formatPrice = (value, currency) => {
+      const emojis = {
+        copper: '<:C_copperstar:1346130043415298118>',
+        silver: '<:C_silverstag:1346130090378920066>',
+        gold: '<:C_golddragon:1346130130564808795>'
+      };
+
+      const plural = value === 1 ? '' : 's';
+      const names = {
+        copper: `copper star${plural}`,
+        silver: `silver stag${plural}`,
+        gold: `gold dragon${plural}`
+      };
+
+      return `${value} ${names[currency]} ${emojis[currency]}`;
+    };
+
+    const generateEmbed = (page) => {
+      const start = page * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = allItems.slice(start, end);
+
       const embed = new EmbedBuilder()
         .setTitle('<:servericon:1343229799228899419> ― RPG Market')
-        .setColor('#23272A');
+        .setColor('#23272A')
+        .setFooter({ text: `Page ${page + 1}/${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` });
 
-      const start = page * ITEMS_PER_PAGE;
-      const end = start + ITEMS_PER_PAGE;
-      const currentItems = items.slice(start, end);
-
-      currentItems.forEach(item => {
-        const emoji = item.emoji || '❔';
-        const name = item.name || 'Unnamed Item';
-        const rarity = item.rarity || 'unknown';
-        const category = item.category || 'item';
+      for (const item of pageItems) {
+        const emoji = item.emoji ?? '';
+        const price = formatPrice(item.value, item.currency);
         const effect = item.effect?.trim() || '*no effect.*';
-
-        const priceFormatted = (typeof item.value === 'number' && item.currency)
-          ? formatPrice(item.value, item.currency)
-          : '*undefined*';
+        const rarity = item.rarity?.toLowerCase() ?? 'unknown';
+        const category = item.type?.toLowerCase() ?? 'unknown';
 
         embed.addFields({
-          name: `➺ ${emoji} **${name}**`,
-          value: `・ *class* — ${rarity} ${category}\n・ *price* — ${priceFormatted}\n・ *effect* — ${effect}`,
-          inline: false
+          name: `➺ ${emoji} **${item.name}**`,
+          value: `・ *class* — ${rarity} ${category}\n・ *price* — ${price}\n・ *effect* — ${effect}`,
+          inline: true
         });
-      });
-
-      const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-      embed.setFooter({ text: `Page ${page + 1}/${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` });
+      }
 
       return embed;
     };
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId('prevPage')
-        .setLabel('')
+        .setCustomId('market_prev')
         .setEmoji('<:left:1357664737214857236>')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId('nextPage')
-        .setLabel('')
+        .setCustomId('market_next')
         .setEmoji('<:right:1357664782827917443>')
         .setStyle(ButtonStyle.Secondary)
     );
 
-    const messageReply = await message.channel.send({
-      embeds: [getPageEmbed(currentPage)],
+    const msg = await message.channel.send({
+      embeds: [generateEmbed(currentPage)],
       components: [row]
     });
 
-    const collector = messageReply.createMessageComponentCollector({ time: 60000 });
+    const collector = msg.createMessageComponentCollector({
+      time: 60000,
+      filter: (i) => i.user.id === message.author.id
+    });
 
     collector.on('collect', async (interaction) => {
-      if (interaction.user.id !== message.author.id) return interaction.reply({ content: 'Only the command user can interact with this menu.', ephemeral: true });
-
-      if (interaction.customId === 'prevPage') {
-        currentPage = currentPage > 0 ? currentPage - 1 : Math.ceil(items.length / ITEMS_PER_PAGE) - 1;
-      } else if (interaction.customId === 'nextPage') {
-        currentPage = (currentPage + 1) % Math.ceil(items.length / ITEMS_PER_PAGE);
+      if (interaction.customId === 'market_prev') {
+        currentPage = currentPage > 0 ? currentPage - 1 : totalPages - 1;
+      } else if (interaction.customId === 'market_next') {
+        currentPage = currentPage < totalPages - 1 ? currentPage + 1 : 0;
       }
 
       await interaction.update({
-        embeds: [getPageEmbed(currentPage)],
+        embeds: [generateEmbed(currentPage)],
         components: [row]
       });
     });
