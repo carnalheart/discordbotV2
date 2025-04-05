@@ -65,5 +65,4 @@ module.exports = (client) => {
     }
   });
 
-  // Add similar try-catch to all other log events if needed
 };
