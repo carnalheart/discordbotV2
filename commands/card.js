@@ -1,54 +1,75 @@
+const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
-const MarketItem = require('../models/marketitem');
-
-function toTitleCase(str) {
-  return str.replace(/\b\w/g, char => char.toUpperCase());
-}
+const itemDB = require('../data/seeditems'); // Ensure this is where your item list is stored
 
 module.exports = {
   name: 'card',
-  description: 'Displays a character card.',
+  description: 'View a character\'s RPG card.',
   async execute(message, args) {
     const name = args[0];
-    if (!name) return message.reply('Usage: `.card <character>`');
+    if (!name) return message.reply('Please provide a character name.');
 
-    const character = await Character.findOne({ name: { $regex: `^${name}$`, $options: 'i' } });
-    if (!character) return message.reply(`⚠️ Character **${name}** not found.`);
+    const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });
+    if (!character) return message.reply(`Character **${name}** not found.`);
 
-    const stats = character.stats || {};
-    const coins = character.coins || {};
-    const invList = [];
+    const {
+      strength, dexterity, constitution,
+      intelligence, wisdom, charisma
+    } = character.stats;
 
-    for (const entry of character.inventory) {
-      const itemName = Object.keys(entry)[0];
-      const qty = entry[itemName];
-      const itemData = await MarketItem.findOne({ name: { $regex: `^${itemName}$`, $options: 'i' } });
-      const emoji = itemData?.emoji || '';
-      invList.push(`➺ ${emoji} **${toTitleCase(itemName)}** ・ x${qty}`);
-    }
+    const { copper = 0, silver = 0, gold = 0 } = character.coins;
+    const hpCurrent = character.hpCurrent ?? 0;
+    const hpMax = character.hpMax ?? 0;
 
-    const embed = {
-      title: `― ${character.name}`,
-      description: `[Character biography.](${character.bio})`,
-      fields: [
+    // Inventory formatting
+    const inventoryList = character.inventory.length
+      ? character.inventory.map(itemObj => {
+          const itemName = Object.keys(itemObj)[0];
+          const quantity = itemObj[itemName];
+          const dbItem = itemDB.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+          const displayName = itemName
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+          const emoji = dbItem?.emoji || '';
+          return `➺ ${emoji} **${displayName}** ・ x${quantity}`;
+        }).join('\n')
+      : '*No items yet.*';
+
+    const bio = character.bio || 'https://discord.com';
+    const image = character.image || 'https://i.imgur.com/5c3aNMa.png?quality=lossless';
+
+    const embed = new EmbedBuilder()
+      .setTitle(`<:servericon:1343229799228899419> ― ${character.name}`)
+      .setDescription(`[Character biography.](${bio})`)
+      .addFields(
         {
           name: 'Statistics',
-          value: `**STR** ${stats.str || 0} ・ **DEX** ${stats.dex || 0} ・ **CON** ${stats.con || 0} ・ **INT** ${stats.int || 0} ・ **WIS** ${stats.wis || 0} ・ **CHA** ${stats.char || 0}\n**Health** ${character.hpCurrent}/${character.hpMax}`,
+          value:
+            `➺ **Strength** ・ ${strength}\n` +
+            `➺ **Dexterity** ・ ${dexterity}\n` +
+            `➺ **Constitution** ・ ${constitution}\n` +
+            `➺ **Intelligence** ・ ${intelligence}\n` +
+            `➺ **Wisdom** ・ ${wisdom}\n` +
+            `➺ **Charisma** ・ ${charisma}\n` +
+            `➺ **Health Points** ・ ${hpCurrent}/${hpMax}`
         },
         {
           name: 'Coin Pouch',
-          value: `➺ Copper Stars ・ ${coins.copper || 0}\n➺ Silver Stags ・ ${coins.silver || 0}\n➺ Gold Dragons ・ ${coins.gold || 0}`,
+          value:
+            `➺ **Copper Stars** ・ ${copper} <:C_copperstar:1346130043415298118>\n` +
+            `➺ **Silver Stags** ・ ${silver} <:C_silverstag:1346130090378920066>\n` +
+            `➺ **Gold Dragons** ・ ${gold} <:C_golddragon:1346130130564808795>`
         },
         {
           name: 'Inventory',
-          value: invList.length ? invList.join('\n') : '*No items yet.*',
+          value: inventoryList
         }
-      ],
-      image: { url: character.image || 'https://i.imgur.com/5c3aNMa.png?quality=lossless' },
-      footer: { text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.' },
-      color: 0x23272A,
-    };
+      )
+      .setImage(image)
+      .setFooter({ text: 'This is your character’s roleplay card. Run .help for a detailed list of RPG commands and how to use them.' })
+      .setColor('#23272A');
 
-    message.channel.send({ embeds: [embed] });
+    return message.channel.send({ embeds: [embed] });
   }
 };
