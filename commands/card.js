@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const Character = require('../models/character');
-const itemDB = require('../seeds/seedItems'); // Ensure this is where your item list is stored
+const itemDB = require('../data/itemList'); // Ensure this is where your item list is stored
 
 module.exports = {
   name: 'card',
