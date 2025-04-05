@@ -16,24 +16,27 @@ module.exports = {
       return message.channel.send(`⚠️ Character **${charName}** not found.`);
     }
 
-    // HP
-    const hpDisplay = character.hp?.current && character.hp?.max
-      ? `${character.hp.current}/${character.hp.max}`
-      : '0';
+    const hp = character.hp?.max ? `${character.hp.current}/${character.hp.max}` : '0';
 
-    // Load market item info for inventory display
-    const inventoryEntries = Object.entries(character.inventory || {});
-    let inventoryDisplay = '*No items yet.*';
+    // Get market items and build emoji map
+    const marketItems = await MarketItem.find();
+    const emojiMap = {};
+    marketItems.forEach(item => {
+      if (item.name && item.emoji) {
+        emojiMap[item.name.toLowerCase()] = item.emoji;
+      }
+    });
 
-    if (inventoryEntries.length > 0) {
-      const marketItems = await MarketItem.find();
-      const emojiMap = Object.fromEntries(marketItems.map(item => [item.name.toLowerCase(), item.emoji || '']));
+    // Build inventory display
+    const inventory = character.inventory || {};
+    const inventoryLines = Object.entries(inventory)
+      .filter(([_, qty]) => qty > 0)
+      .map(([name, qty]) => {
+        const emoji = emojiMap[name.toLowerCase()] || '';
+        return `➺ ${emoji} **${name}** ・x${qty}`;
+      });
 
-      inventoryDisplay = inventoryEntries.map(([itemName, qty]) => {
-        const emoji = emojiMap[itemName.toLowerCase()] || '';
-        return `➺ ${emoji} **${itemName}** ・x${qty}`;
-      }).join('\n');
-    }
+    const inventoryDisplay = inventoryLines.length > 0 ? inventoryLines.join('\n') : '*No items yet.*';
 
     const embed = new EmbedBuilder()
       .setTitle(`<:servericon:1343229799228899419> ― ${character.name}`)
@@ -48,7 +51,7 @@ module.exports = {
             `➺ **Intelligence** ・ ${character.stats?.intelligence || 0}\n` +
             `➺ **Wisdom** ・ ${character.stats?.wisdom || 0}\n` +
             `➺ **Charisma** ・ ${character.stats?.charisma || 0}\n` +
-            `➺ **Health Points** ・ ${hpDisplay}`
+            `➺ **Health Points** ・ ${hp}`
         },
         {
           name: '__Coin Pouch__',
