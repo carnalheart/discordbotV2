@@ -42,7 +42,6 @@ module.exports = (client) => {
     }
   });
 
-  // Message Edit
   client.on('messageUpdate', async (oldMsg, newMsg) => {
     try {
       if (oldMsg.partial) await oldMsg.fetch();
