@@ -1,62 +1,83 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const MarketItem = require('../models/marketitem');
 
+const ITEMS_PER_PAGE = 10;
+
+function formatPrice(value, currency) {
+  const emojiMap = {
+    copper: '<:C_copperstar:1346130043415298118>',
+    silver: '<:C_silverstag:1346130090378920066>',
+    gold: '<:C_golddragon:1346130130564808795>',
+  };
+
+  if (!value || !currency || !emojiMap[currency]) return '*undefined*';
+
+  const plural = value === 1 ? '' : 's';
+  const nameMap = {
+    copper: `copper star${plural}`,
+    silver: `silver stag${plural}`,
+    gold: `gold dragon${plural}`,
+  };
+
+  return `**${value} ${nameMap[currency]}** ${emojiMap[currency]}`;
+}
+
 module.exports = {
   name: 'marketview',
-  description: 'View the RPG item market',
+  description: 'Displays the RPG market',
 
   async execute(message) {
     const items = await MarketItem.find().sort({ name: 1 });
-    const itemsPerPage = 10;
-    const totalPages = Math.ceil(items.length / itemsPerPage);
+
+    if (!items.length) {
+      return message.channel.send('No market items found.');
+    }
+
     let currentPage = 0;
 
     const getPageEmbed = (page) => {
-      const start = page * itemsPerPage;
-      const currentItems = items.slice(start, start + itemsPerPage);
-
       const embed = new EmbedBuilder()
         .setTitle('<:servericon:1343229799228899419> ― RPG Market')
-        .setFooter({ text: `Page ${page + 1} of ${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` })
-        .setColor('#23272A')
-        .setImage('https://media.discordapp.net/attachments/1344353226123640885/1357754870094102599/RPG-Market-04-04-20252.png?ex=67f15b42&is=67f009c2&hm=a3e13e296a52a708931cc2c075c6d2d6dd6f92e780abfd234aacbd87619bf723&=&format=webp&quality=lossless&width=1280&height=270');
+        .setColor('#23272A');
+
+      const start = page * ITEMS_PER_PAGE;
+      const end = start + ITEMS_PER_PAGE;
+      const currentItems = items.slice(start, end);
 
       currentItems.forEach(item => {
-        const priceFormatted = formatPrice(item.price, item.currency);
-        const effectText = item.effect?.trim() ? item.effect : '*no effect.*';
+        const emoji = item.emoji || '❔';
+        const name = item.name || 'Unnamed Item';
+        const rarity = item.rarity || 'unknown';
+        const category = item.category || 'item';
+        const effect = item.effect?.trim() || '*no effect.*';
+
+        const priceFormatted = (typeof item.value === 'number' && item.currency)
+          ? formatPrice(item.value, item.currency)
+          : '*undefined*';
+
         embed.addFields({
-          name: `➺ ${item.emoji} **${item.name}**`,
-          value: `・ *class* — ${item.rarity} ${item.category}\n・ *price* — ${priceFormatted}\n・ *effect* — ${effectText}`,
-          inline: true
+          name: `➺ ${emoji} **${name}**`,
+          value: `・ *class* — ${rarity} ${category}\n・ *price* — ${priceFormatted}\n・ *effect* — ${effect}`,
+          inline: false
         });
       });
+
+      const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+      embed.setFooter({ text: `Page ${page + 1}/${totalPages} | Have your character purchase an item with .marketbuy <character> <item> <quantity>` });
 
       return embed;
     };
 
-    const formatPrice = (value, currency) => {
-      const plural = value === 1 ? '' : 's';
-      const emojiMap = {
-        copper: `<:C_copperstar:1346130043415298118>`,
-        silver: `<:C_silverstag:1346130090378920066>`,
-        gold: `<:C_golddragon:1346130130564808795>`
-      };
-      const nameMap = {
-        copper: `copper star${plural}`,
-        silver: `silver stag${plural}`,
-        gold: `gold dragon${plural}`
-      };
-      return `**${value} ${nameMap[currency]}** ${emojiMap[currency]}`;
-    };
-
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId('prev_market')
-        .setLabel('<:left:1357664737214857236>')
+        .setCustomId('prevPage')
+        .setLabel('')
+        .setEmoji('<:left:1357664737214857236>')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId('next_market')
-        .setLabel('<:right:1357664782827917443>')
+        .setCustomId('nextPage')
+        .setLabel('')
+        .setEmoji('<:right:1357664782827917443>')
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -65,27 +86,21 @@ module.exports = {
       components: [row]
     });
 
-    const collector = messageReply.createMessageComponentCollector({ time: 120000 });
+    const collector = messageReply.createMessageComponentCollector({ time: 60000 });
 
-    collector.on('collect', async interaction => {
-      if (interaction.user.id !== message.author.id) {
-        return interaction.reply({ content: 'Only the command user can change pages.', ephemeral: true });
-      }
+    collector.on('collect', async (interaction) => {
+      if (interaction.user.id !== message.author.id) return interaction.reply({ content: 'Only the command user can interact with this menu.', ephemeral: true });
 
-      if (interaction.customId === 'prev_market') {
-        currentPage = currentPage > 0 ? currentPage - 1 : totalPages - 1;
-      } else if (interaction.customId === 'next_market') {
-        currentPage = currentPage < totalPages - 1 ? currentPage + 1 : 0;
+      if (interaction.customId === 'prevPage') {
+        currentPage = currentPage > 0 ? currentPage - 1 : Math.ceil(items.length / ITEMS_PER_PAGE) - 1;
+      } else if (interaction.customId === 'nextPage') {
+        currentPage = (currentPage + 1) % Math.ceil(items.length / ITEMS_PER_PAGE);
       }
 
       await interaction.update({
         embeds: [getPageEmbed(currentPage)],
         components: [row]
       });
-    });
-
-    collector.on('end', () => {
-      messageReply.edit({ components: [] }).catch(() => {});
     });
   }
 };
