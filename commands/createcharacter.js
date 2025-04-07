@@ -22,7 +22,7 @@ module.exports = {
 
     const newChar = new Character({
       name,
-      owner: message.author.id,
+      ownerId: message.author.id, // ✅ Fix: ensure required ownerId field is used
       bio: '',
       image: '',
       stats: {

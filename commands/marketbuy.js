@@ -17,15 +17,17 @@ function formatCurrency(value, currency) {
 }
 
 function toTitleCase(str) {
-  return str.replace(/\b\w/g, char => char.toUpperCase());
+  return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 }
 
 module.exports = {
   name: 'marketbuy',
   description: 'Purchase an item from the RPG Market.',
   async execute(message, args) {
-    const [characterName, itemName, qtyStr] = args;
-    const quantity = parseInt(qtyStr);
+    const characterName = args[0];
+    const quantity = parseInt(args[args.length - 1]);
+    const itemName = args.slice(1, -1).join(' '); // handles multi-word items
+
     if (!characterName || !itemName || isNaN(quantity)) {
       return message.reply('Usage: `.marketbuy <character> <item> <quantity>`');
     }
