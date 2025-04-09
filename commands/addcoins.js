@@ -20,7 +20,11 @@ module.exports = {
     };
 
     if (!name || !amount || !['gold', 'silver', 'copper'].includes(type)) {
-      return message.channel.send('Usage: `.addcoins <character> <amount> <type>`');
+      const errorEmbed = new EmbedBuilder()
+        .setTitle('― Invalid Usage')
+        .setDescription('Usage: `.addcoins <character> <amount> <currency>`')
+        .setColor('#23272A');
+      return message.channel.send({ embeds: [errorEmbed] });
     }
 
     const character = await Character.findOne({ name: new RegExp(`^${name}$`, 'i') });

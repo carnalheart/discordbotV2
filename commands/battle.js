@@ -41,7 +41,7 @@ module.exports = {
     const initiatorChar = challenger === char1 ? char2 : char1;
 
     const consentEmbed = new EmbedBuilder()
-      .setTitle('― Battle Initiated!')
+      .setTitle('<:D_longsword_uncommon:1357703463944851696> ― Battle Initiated!')
       .setDescription(`It looks like **${char1.name}** and **${char2.name}** are going to fight! Do you wish to initiate?`)
       .setFooter({ text: 'Reply with "accept" if you consent to this battle game.' })
       .setColor('#23272A');
@@ -86,7 +86,7 @@ module.exports = {
 
       if (char1Final === char2Final || (char1Final < 10 && char2Final < 10)) {
         const drawEmbed = new EmbedBuilder()
-          .setTitle('― Battle Result!')
+          .setTitle('<:D_longsword_uncommon:1357703463944851696> ― Battle Result!')
           .setDescription('*Nobody won the fight.* Neither cat rolled a high enough value to win.')
           .setColor('#23272A');
         return message.channel.send({ embeds: [drawEmbed] });
@@ -115,14 +115,14 @@ module.exports = {
       else threshold = 'critical success';
 
       const resultEmbed = new EmbedBuilder()
-        .setTitle('― Battle Result!')
+        .setTitle('<:D_longsword_uncommon:1357703463944851696> ― Battle Result!')
         .setDescription(`**${winner.name}** has won the fight! Their success threshold was **${threshold}**.`)
         .setColor('#23272A');
 
       return message.channel.send({ embeds: [resultEmbed] });
 
     } catch (err) {
-      return message.channel.send(`The battle game was aborted.`);
+      return message.channel.send(`The battle game was cancelled.`);
     }
   }
 };

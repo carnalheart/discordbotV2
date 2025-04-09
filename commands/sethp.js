@@ -33,7 +33,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle('― Hit Points Set!')
-      .setDescription(`${character.name} now has **${hpValue} HP**.`)
+      .setDescription(`${character.name}'s maximum hit points was set to **${hpValue}**.`)
       .setColor('#23272A');
 
     await message.channel.send({ embeds: [embed] });

@@ -37,7 +37,7 @@ module.exports = {
       const item = await MarketItem.findOne({ name: new RegExp(`^${reward}$`, 'i') });
 
       const embed = new EmbedBuilder()
-        .setTitle('― Fishing Game')
+        .setTitle('<:D_fishingrod_common:1357702507627020388> ― Fishing Game')
         .setDescription(
           `A stir in the water catches **${character.name}**'s attention. As the end of their fishing line begins to tug, they respond with a yank, pulling a flip-flopping fish from the water.\n\n` +
           `**${character.name} caught a ${item?.rarity || 'unknown'} ${reward} ${item?.emoji || ''}!**`
@@ -47,7 +47,7 @@ module.exports = {
       return message.channel.send({ embeds: [embed] });
     } else {
       const embed = new EmbedBuilder()
-        .setTitle('― Fishing Game')
+        .setTitle('<:D_fishingrod_common:1357702507627020388> ― Fishing Game')
         .setDescription(
           `A stir in the water catches **${character.name}**'s attention. As the end of their fishing line begins to tug, they respond with a half-hearted yank. The fish on the end of their line frees itself and quickly swims away.\n\n` +
           `**${character.name} did not catch anything.**`
